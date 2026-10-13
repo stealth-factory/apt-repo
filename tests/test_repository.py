@@ -1,4 +1,3 @@
-import hashlib
 import importlib.util
 import os
 from pathlib import Path
@@ -73,6 +72,32 @@ class RepositoryTests(unittest.TestCase):
         with patch.dict(os.environ, {'APT_SIGNING_FINGERPRINT': 'A' * 40}, clear=True):
             with self.assertRaisesRegex(ValueError, 'KEY'):
                 r.sign(self.site)
+
+    def test_signing_removes_temporary_keyring_even_on_failure(self):
+        from unittest.mock import patch
+        fingerprint = 'A' * 40
+        calls = []
+        homes = []
+        def fake_output(command, **kwargs):
+            calls.append(command)
+            env = kwargs['env']
+            self.assertNotIn('APT_SIGNING_KEY', env)
+            homes.append(Path(env['GNUPGHOME']))
+            self.assertTrue(homes[-1].is_dir())
+            self.assertFalse(homes[-1].is_relative_to(self.site))
+            if '--list-secret-keys' in command:
+                return ('sec:::::::::\nfpr:::::::::' + ('B' * 40) + ':\n').encode()
+            return b''
+        with patch.dict(os.environ, {'APT_SIGNING_FINGERPRINT': fingerprint,
+                                     'APT_SIGNING_KEY': 'non-key test input'}, clear=True), \
+                patch.object(r.subprocess, 'check_output', side_effect=fake_output), \
+                patch.object(r.subprocess, 'run'):
+            with self.assertRaisesRegex(ValueError, 'fingerprint'):
+                r.sign(self.site)
+        self.assertTrue(homes)
+        self.assertTrue(all(not home.exists() for home in homes))
+        self.assertFalse(any('--clearsign' in command for command in calls))
+        self.assertEqual(list(self.site.iterdir()), [])
 
     @unittest.skipUnless(shutil.which('dpkg-deb'), 'Linux dpkg required')
     def test_import_retry_changed_bytes_and_downgrade(self):
