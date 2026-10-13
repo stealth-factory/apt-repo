@@ -6,7 +6,9 @@ repository; it is not inclusion in Debian or Ubuntu's official archives.
 
 **Not live yet.** Merging this implementation does not activate publishing.
 See [activation and recovery](docs/operations.md) for the exact approval and
-configuration requirements. No signing credentials are stored in this tree.
+configuration requirements. For a key generated and held entirely on GitHub,
+see [one-time signing setup](docs/github-key-setup.md). No signing credentials
+are stored in this tree.
 
 ## Install after activation
 

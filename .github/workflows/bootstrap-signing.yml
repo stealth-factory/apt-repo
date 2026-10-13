@@ -1,0 +1,35 @@
+name: Set up APT signing key once
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type GENERATE_INITIAL_APT_KEY to approve a new one-year GitHub-held key'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Serialize with publication so it cannot observe partly configured secrets.
+concurrency:
+  group: apt-publication
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    environment: apt-publishing
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Install signing tools on the ephemeral runner
+        run: sudo apt-get update && sudo apt-get install -y gnupg
+      - name: Generate and store the initial key on this runner
+        env:
+          APT_BOOTSTRAP_TOKEN: ${{ secrets.APT_BOOTSTRAP_TOKEN }}
+          APT_BOOTSTRAP_CONFIRMATION: ${{ inputs.confirmation }}
+        run: python3 scripts/bootstrap_signing.py
