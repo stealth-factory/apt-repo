@@ -54,11 +54,13 @@ Disabled workflows do not retain release dispatches for later replay. Record
 releases published during the pause and any interrupted imports. After recovery,
 re-enable the workflow and manually dispatch `publish.yml` on `main` for each
 missed package/tag in ascending version order, waiting for each publication to
-succeed before the next. Check the retained `apt-state` history first: an already
-imported identical version is retryable; if a newer version has already landed,
-report any missing older package for reviewed recovery rather than bypassing the
-downgrade check. Scheduled refreshes only re-sign existing packages and cannot
-recover missed releases. Coordinate recovery with upstream release publishing
+succeed before the next. Check the retained `apt-state` history first. Skip
+already-retained versions older than the newest retained version: the importer
+rejects them as downgrades even when their bytes are identical. An identical
+retry is accepted only for the newest retained version. If an older package is
+missing after a newer version has landed, report it for reviewed recovery rather
+than bypassing downgrade protection. Scheduled refreshes only re-sign existing
+packages and cannot recover missed releases. Coordinate recovery with upstream release publishing
 so a new dispatch does not overtake the versions being replayed.
 
 ## Publication contract
