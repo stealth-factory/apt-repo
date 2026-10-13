@@ -45,8 +45,21 @@ changing that protection is another access decision. There is no enable-variable
 switch: release dispatches, scheduled refreshes and manual recovery run on `main`.
 Missing setup fails visibly instead of silently skipping the job. PR tests have
 read-only permissions. To pause publication during an incident, disable the
-`Publish signed APT repository` workflow in GitHub Actions; re-enable it after
-recovery. This does not change stored credentials or their permissions.
+`Publish signed APT repository` workflow in GitHub Actions, then cancel all runs
+that are running, queued, or waiting for approval. Confirm none can still deploy
+before treating publication as paused. This does not change stored credentials
+or their permissions.
+
+Disabled workflows do not retain release dispatches for later replay. Record
+releases published during the pause and any interrupted imports. After recovery,
+re-enable the workflow and manually dispatch `publish.yml` on `main` for each
+missed package/tag in ascending version order, waiting for each publication to
+succeed before the next. Check the retained `apt-state` history first: an already
+imported identical version is retryable; if a newer version has already landed,
+report any missing older package for reviewed recovery rather than bypassing the
+downgrade check. Scheduled refreshes only re-sign existing packages and cannot
+recover missed releases. Coordinate recovery with upstream release publishing
+so a new dispatch does not overtake the versions being replayed.
 
 ## Publication contract
 
