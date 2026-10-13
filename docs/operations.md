@@ -34,16 +34,19 @@ These are separate owner-approved activation actions, not implemented setup:
    writes appropriately; do not grant new long-lived tokens or deploy keys.
    If organization policy blocks the built-in token, stop for approval rather
    than introducing a more privileged credential.
-5. Set repository variable `APT_PUBLISH_ENABLED=true` in both apt-repo and
-   opscope only after the above is
-   approved. Dispatch `publish.yml` on `main` with package `opscope` and its exact released
-   `vX.Y.Z` tag, and approve the protected
-   environment. This performs the first **public package publication**.
+5. After completing the approved setup, dispatch `publish.yml` on `main` with
+   package `opscope` and its exact released `vX.Y.Z` tag, and approve the protected
+   environment. This performs the first **public package publication**. Future
+   successful tagged Opscope releases notify this repository automatically.
 
 Required reviewers may mean each release or scheduled metadata refresh needs approval. The
 owner decides whether to approve each run or authorize unattended publication;
-changing that protection is another access decision. With no enable variable,
-all publishing jobs are skipped and PR tests have read-only permissions.
+changing that protection is another access decision. There is no enable-variable
+switch: release dispatches, scheduled refreshes and manual recovery run on `main`.
+Missing setup fails visibly instead of silently skipping the job. PR tests have
+read-only permissions. To pause publication during an incident, disable the
+`Publish signed APT repository` workflow in GitHub Actions; re-enable it after
+recovery. This does not change stored credentials or their permissions.
 
 ## Publication contract
 
@@ -157,7 +160,7 @@ packages, indexes, and retained by-hash objects. macOS skips tests needing Linux
 tools. No tests generate signing credentials.
 
 `tests/lifecycle.sh` consumes an **already signed** snapshot at `/repo` in a
-clean root container. It is run by the gated publish workflow before deployment.
+clean root container. It is run by the publish workflow before deployment.
 Actual signature verification, signed install/upgrade and Pages reachability
 remain unverified until an approved key and hosting setup are available. A tag
 producing and uploading the new `.deb` remains a release acceptance check; PR

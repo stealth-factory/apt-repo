@@ -62,13 +62,15 @@ from this shared repository. Package removal does not remove personal settings.
 
 ## How releases arrive
 
-After activation, Opscope's successful release job sends a `repository_dispatch`
+Opscope's successful tagged release job sends a `repository_dispatch`
 to this repository using the existing Homebrew bot token (`GH_TOKEN`, falling
 back to `RELEASE_TOKEN`). The event carries only the allowlisted source, exact
 stable tag, and release commit. No secret is transmitted. The importer resolves
 that tag, verifies its commit and public release, and downloads only that
 version's `.deb` and checksum. A missing asset pair fails without changing the
 live site. Manual recovery on `main` requires an explicit package and tag.
+No enable flag is required. Signing and hosting must still be configured before
+publication can succeed; missing setup fails the run rather than skipping it.
 
 For schedule testing, a separate refresh temporarily runs daily at **19:30
 Asia/Taipei (11:30 UTC)** and re-signs the already imported package indexes
