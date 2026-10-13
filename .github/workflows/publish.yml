@@ -3,11 +3,11 @@ name: Publish signed APT repository
 on:
   repository_dispatch:
     types: [opscope-release]
-  # Temporary schedule test: daily at 19:30 Asia/Taipei (11:30 UTC).
-  # Restore monthly cron '23 5 1 * *' after testing. Metadata expires after 90 days.
+  # Monthly on the 1st at 19:30 Asia/Taipei (11:30 UTC).
+  # Metadata expires after 90 days.
   # This never discovers or imports new versions.
   schedule:
-    - cron: '30 11 * * *'
+    - cron: '30 11 1 * *'
   workflow_dispatch:
     inputs:
       package:
