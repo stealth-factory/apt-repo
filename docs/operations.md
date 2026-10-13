@@ -63,9 +63,10 @@ signing material stays in the apt-publishing environment.
 
 The workflow only imports the exact stable public release requested by a
 validated dispatch or explicit manual recovery, from `packages.json`. The tag
-must resolve to the dispatched commit. A monthly schedule only refreshes
-retained metadata, leaving at least 59 days of margin before its 90-day expiry
-when runs succeed. Missed runs still need recovery before expiry; the validity window does not
+must resolve to the dispatched commit. For schedule testing, the refresh temporarily runs daily at 19:30 Asia/Taipei
+(11:30 UTC, `30 11 * * *`) and only refreshes retained metadata. Restore the
+monthly schedule (`23 5 1 * *`) through a reviewed change after testing; no
+automatic end date is configured. Metadata still expires after 90 days. Missed runs still need recovery before expiry; the validity window does not
 replace monitoring or recovery. It never queries latest releases. Empty initial state fails
 closed on a refresh; bootstrap by importing an explicit approved release. Incoming
 checksums must name exactly the expected package; control metadata must match
@@ -103,8 +104,9 @@ restore signing/publication before then. APT should fail closed on expired data.
 `Valid-Until` is an APT metadata policy, not a requirement to replace or renew a
 signing key every ninety days. The owner approved a 90-day window to bound how
 long an attacker or stale mirror can replay an old signed package index while
-leaving recovery time for missed runs. The monthly refresh normally
-leaves at least 59 days of margin. This is a configurable design choice, not
+leaving recovery time for missed runs. The intended monthly refresh normally
+leaves at least 59 days of margin; the temporary daily schedule test does not
+change the 90-day validity policy. This is a configurable design choice, not
 an APT mandate; this implementation retains it unless the owner explicitly
 approves a different freshness/security policy. Without it, an old correctly
 signed index could remain acceptable indefinitely while the key is trusted.
