@@ -36,3 +36,22 @@ Description: terminal widgets showing real operational data
  Sixteen widgets and their launcher, with private sibling binaries.
  No Node or Rust runtime is required.
 
+Package: opscope
+Architecture: amd64
+Version: 1.7.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 23101
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_1.7.0_amd64.deb
+Size: 3428628
+MD5sum: 65eb633111c8d2c67508cf14349021d1
+SHA1: 24b4e44771da9f6b8532607507c7e0192fcdd229
+SHA256: 6fd5a5e7cde8b9cd7049b17afaae84a506e104caaa5a37f0dec805480299cad1
+SHA512: e2183ec7087297af5f41a58f26d598acea45e19723f32bf66f301858b83a20d8c3a882823c36e248f4e5f54f53e760a1aaebe225ff9d46fc48add685d9332890
+Homepage: https://github.com/stealth-factory/opscope
+Description: terminal widgets showing real operational data
+ Sixteen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
