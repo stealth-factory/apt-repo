@@ -20,14 +20,17 @@ class BootstrapTests(unittest.TestCase):
     }
     fingerprint = 'A' * 40
 
-    def fake(self, calls, existing=b'', fail_variable=False):
+    def fake(self, calls, existing=b'', existing_variables=b'', fail_write=None):
         def execute(args, *, env, data=None):
             calls.append((args, env, data))
             if args[0] == 'gh':
                 if args[-1] == '.secrets[].name':
                     return existing
-                if fail_variable and 'POST' in args:
-                    raise RuntimeError('simulated variable write failure')
+                if args[-1] == '.variables[].name':
+                    return existing_variables
+                write = args[3] if args[:3] == ['gh', 'secret', 'set'] else (setup.FINGERPRINT if 'POST' in args else None)
+                if fail_write is not None and write == fail_write:
+                    raise RuntimeError('simulated write failure')
                 return b''
             if '--quick-generate-key' in args:
                 directory = Path(env['GNUPGHOME']) / 'openpgp-revocs.d'
@@ -51,12 +54,14 @@ class BootstrapTests(unittest.TestCase):
                 run.assert_not_called()
 
     def test_existing_or_partial_key_configuration_blocks_generation(self):
-        for name in setup.SECRETS:
+        for name in sorted(setup.SECRETS) + [setup.FINGERPRINT]:
             calls = []
-            with patch.dict(os.environ, self.environment, clear=True), patch.object(setup, 'execute', side_effect=self.fake(calls, existing=name.encode())):
+            existing = {'existing_variables' if name == setup.FINGERPRINT else 'existing': name.encode()}
+            with self.subTest(name=name), patch.dict(os.environ, self.environment, clear=True), patch.object(setup, 'execute', side_effect=self.fake(calls, **existing)), patch.object(setup.tempfile, 'TemporaryDirectory') as directory:
                 with self.assertRaisesRegex(ValueError, 'refusing replacement'):
                     setup.bootstrap()
-            self.assertTrue(all(args[0] == 'gh' for args, _, _ in calls))
+                directory.assert_not_called()
+                self.assertEqual([args[:3] for args, _, _ in calls], [['gh', 'api', '--paginate']] * 2)
 
     def test_stores_secrets_via_stdin_without_logging_or_token_in_gpg(self):
         calls, output = [], io.StringIO()
@@ -78,15 +83,26 @@ class BootstrapTests(unittest.TestCase):
         cleanup.assert_called_once()
 
     def test_partial_write_failure_keeps_public_fingerprint_and_cleans_runner(self):
-        calls, output = [], io.StringIO()
-        with patch.dict(os.environ, self.environment, clear=True), patch.object(setup, 'execute', side_effect=self.fake(calls, fail_variable=True)), patch.object(setup.subprocess, 'run') as cleanup, redirect_stdout(output):
-            with self.assertRaisesRegex(RuntimeError, 'simulated'):
-                setup.bootstrap()
-        self.assertIn(self.fingerprint, output.getvalue())
-        cleanup.assert_called_once()
-        for args, env, _ in calls:
-            if args[0] == 'gpg':
-                self.assertFalse(Path(env['GNUPGHOME']).exists())
+        order = ['APT_SIGNING_KEY', 'APT_SIGNING_REVOCATION', setup.FINGERPRINT]
+        for index, failed_write in enumerate(order):
+            calls, output = [], io.StringIO()
+            with self.subTest(write=failed_write), patch.dict(os.environ, self.environment, clear=True), patch.object(setup, 'execute', side_effect=self.fake(calls, fail_write=failed_write)), patch.object(setup.subprocess, 'run') as cleanup, redirect_stdout(output):
+                with self.assertRaisesRegex(RuntimeError, 'simulated'):
+                    setup.bootstrap()
+                attempted = [args[3] if args[:3] == ['gh', 'secret', 'set'] else setup.FINGERPRINT
+                             for args, _, _ in calls
+                             if args[:3] == ['gh', 'secret', 'set'] or 'POST' in args]
+                self.assertEqual(attempted, order[:index + 1])
+                self.assertIn(self.fingerprint, output.getvalue())
+                self.assertNotIn('Signing configuration stored', output.getvalue())
+                self.assertNotIn('fake-private-material', output.getvalue())
+                self.assertNotIn('fake-revocation-material', output.getvalue())
+                cleanup.assert_called_once()
+                self.assertEqual(cleanup.call_args.args[0], ['gpgconf', '--kill', 'gpg-agent'])
+                homes = {env['GNUPGHOME'] for args, env, _ in calls if args[0] == 'gpg'}
+                self.assertEqual(len(homes), 1)
+                self.assertEqual(cleanup.call_args.kwargs['env']['GNUPGHOME'], next(iter(homes)))
+                self.assertTrue(all(not Path(home).exists() for home in homes))
 
 
 if __name__ == '__main__':
