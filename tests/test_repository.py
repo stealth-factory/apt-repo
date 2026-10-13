@@ -1,3 +1,7 @@
+import io
+import json
+import tarfile
+from unittest.mock import patch
 import importlib.util
 import os
 from pathlib import Path
@@ -33,6 +37,15 @@ class RepositoryTests(unittest.TestCase):
         launcher.parent.mkdir(parents=True)
         launcher.write_text('#!/bin/sh\necho fixture\n')
         launcher.chmod(0o755)
+        private = tree / 'usr/libexec/opscope'
+        private.mkdir(parents=True)
+        for binary in r.registry()['opscope']['binaries']:
+            file = private / binary
+            file.write_text('#!/bin/sh\necho fixture\n')
+            file.chmod(0o755)
+        docs = tree / 'usr/share/doc/opscope'
+        docs.mkdir(parents=True)
+        (docs / 'binaries').write_text('\n'.join(r.registry()['opscope']['binaries']) + '\n')
         if extra:
             file = tree / extra
             file.parent.mkdir(parents=True, exist_ok=True)
@@ -48,6 +61,121 @@ class RepositoryTests(unittest.TestCase):
 
     def hash(self, file):
         Path(str(file) + '.sha256').write_text(f'{r.checksum(file)}  {file.name}\n')
+
+    def test_repository_owned_binary_lists_agree(self):
+        expected = (r.ROOT / 'tests/opscope-binaries').read_text().splitlines()
+        self.assertEqual(expected, r.registry()['opscope']['binaries'])
+        self.assertEqual(len(expected), 17)
+
+    def test_repeated_fetch_uses_clean_temporary_downloads(self):
+        filename = 'opscope_1.2.3_amd64.deb'
+        release = {'draft': False, 'prerelease': False, 'tag_name': 'v1.2.3',
+                   'assets': [{'name': filename}, {'name': filename + '.sha256'}]}
+        seen = []
+        def download(command):
+            folder = Path(command[-1])
+            self.assertEqual(list(folder.iterdir()), [])
+            seen.append(folder)
+            (folder / filename).write_bytes(b'fresh fixture')
+        (self.incoming / 'opscope').mkdir()
+        with patch.object(r, 'run', side_effect=lambda *args: 'a' * 40 if '/commits/' in args[2] else json.dumps(release)), \
+                patch.object(r.subprocess, 'check_call', side_effect=download), \
+                patch.object(r, 'import_package') as importer:
+            r.fetch_release(self.site, self.incoming, 'opscope', 'v1.2.3', 'a' * 40)
+            r.fetch_release(self.site, self.incoming, 'opscope', 'v1.2.3', 'a' * 40)
+            self.assertEqual(importer.call_count, 2)
+        self.assertEqual(len(set(seen)), 2)
+        self.assertTrue(all(not folder.exists() for folder in seen))
+
+    def test_intake_rejects_unapproved_relationships(self):
+        config = r.registry()['opscope']
+        fields = {'Package': 'opscope', 'Version': '1.2.3', 'Architecture': 'amd64',
+                  'Depends': config['depends']}
+        for relationship in ['Pre-Depends', 'Recommends', 'Suggests', 'Enhances',
+                             'Conflicts', 'Breaks', 'Replaces', 'Provides',
+                             'Built-Using', 'Static-Built-Using']:
+            with self.subTest(relationship=relationship), patch.object(
+                    r, 'run', side_effect=lambda *args: fields.get(args[-1], 'surprise' if args[-1] == relationship else '')):
+                with self.assertRaisesRegex(ValueError, 'Unapproved relationship'):
+                    r.inspect(Path('fixture.deb'), 'opscope', '1.2.3', config)
+
+    def test_intake_checks_ownership_modes_and_independent_inventory(self):
+        config = r.registry()['opscope']
+        fields = {'Package': 'opscope', 'Version': '1.2.3', 'Architecture': 'amd64',
+                  'Depends': config['depends']}
+        def archive(mutate=None, omitted=None):
+            output = io.BytesIO()
+            with tarfile.open(fileobj=output, mode='w') as tar:
+                names = ['./usr', './usr/bin', './usr/libexec', './usr/libexec/opscope']
+                for name in names:
+                    member = tarfile.TarInfo(name); member.type = tarfile.DIRTYPE; member.mode = 0o755
+                    if mutate: mutate(member)
+                    tar.addfile(member)
+                binaries = [b for b in config['binaries'] if b != omitted]
+                for name in ['usr/bin/opscope'] + ['usr/libexec/opscope/' + b for b in binaries] + ['usr/share/doc/opscope/binaries']:
+                    content = ('\n'.join(binaries) + '\n').encode() if name.endswith('/binaries') else b'executable'
+                    member = tarfile.TarInfo('./' + name); member.mode = 0o755; member.size = len(content)
+                    if mutate: mutate(member)
+                    tar.addfile(member, io.BytesIO(content))
+            return output.getvalue()
+        control = io.BytesIO()
+        with tarfile.open(fileobj=control, mode='w') as tar:
+            tar.addfile(tarfile.TarInfo('./control'), io.BytesIO(b''))
+        def check(data):
+            with patch.object(r, 'run', side_effect=lambda *args: fields.get(args[-1], '')), \
+                    patch.object(r.subprocess, 'check_output', side_effect=lambda args: control.getvalue() if '--ctrl-tarfile' in args else data):
+                r.inspect(Path('fixture.deb'), 'opscope', '1.2.3', config)
+        check(archive())
+        for target in ['./usr/bin/opscope', './usr/libexec/opscope']:
+            for attribute, value in [('uid', 1000), ('gid', 1000), ('mode', 0o777), ('mode', 0o775), ('mode', 0o4755)]:
+                with self.subTest(target=target, attribute=attribute, value=value):
+                    def mutate(member):
+                        if member.name == target: setattr(member, attribute, value)
+                    with self.assertRaisesRegex(ValueError, 'ownership or mode'):
+                        check(archive(mutate))
+        # Removing both a widget and its self-reported inventory entry must fail.
+        with self.assertRaisesRegex(ValueError, 'approved binary inventory'):
+            check(archive(omitted='link'))
+
+    def test_tamper_probe_requires_good_baseline_and_signature_error(self):
+        tools = self.root / 'tools'; tools.mkdir()
+        apt = tools / 'apt-get'
+        apt.write_text("""#!/bin/bash
+set -eu
+count_file="$TEST_APT_COUNT"
+if [ ! -f "$count_file" ]; then
+  touch "$count_file"
+  [ "$TEST_APT_SCENARIO" != baseline-failure ] || exit 42
+  exit 0
+fi
+case "$TEST_APT_SCENARIO" in
+  signature) echo 'BADSIG fixture' >&2; exit 100;;
+  unrelated) echo 'Temporary failure resolving mirror' >&2; exit 100;;
+  accepted) exit 0;;
+esac
+""")
+        apt.chmod(0o755)
+        dist = self.site / 'dists/stable'; dist.mkdir(parents=True)
+        (dist / 'InRelease').write_text('Origin: Stealth Factory\n')
+        for scenario, expected in [('baseline-failure', False), ('unrelated', False),
+                                   ('accepted', False), ('signature', True)]:
+            with self.subTest(scenario=scenario):
+                count = self.root / ('count-' + scenario)
+                result = subprocess.run(['bash', str(r.ROOT / 'tests/authentication.sh'),
+                                         str(self.site), '/non-key-test-fixture'],
+                                        env={**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH'],
+                                             'TEST_APT_COUNT': str(count), 'TEST_APT_SCENARIO': scenario},
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode == 0, expected, result.stderr)
+        self.assertEqual((dist / 'InRelease').read_text(), 'Origin: Stealth Factory\n')
+
+    def test_exact_release_fetch_refuses_mismatched_commit_or_tag(self):
+        release = {'draft': False, 'prerelease': False, 'tag_name': 'v1.2.3', 'assets': []}
+        with patch.object(r, 'run', side_effect=lambda *args: 'b' * 40 if '/commits/' in args[2] else json.dumps(release)):
+            with self.assertRaisesRegex(ValueError, 'requested commit'):
+                r.fetch_release(self.site, self.incoming, 'opscope', 'v1.2.3', 'a' * 40)
+            with self.assertRaisesRegex(ValueError, 'requested tag'):
+                r.fetch_release(self.site, self.incoming, 'opscope', 'v1.2.4', 'a' * 40)
 
     def test_versions_fail_closed(self):
         self.assertLess(r.version('1.9.0'), r.version('1.10.0'))

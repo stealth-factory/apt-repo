@@ -22,8 +22,12 @@ curl --fail --show-error --silent --location \
   https://stealth-factory.github.io/apt-repo/stealth-factory.asc \
   --output /tmp/stealth-factory.asc
 gpg --show-keys --with-fingerprint /tmp/stealth-factory.asc
-# Compare the full primary fingerprint with the maintainer's approved
-# announcement BEFORE continuing. No production fingerprint exists yet.
+# List primary fingerprints only (one line per trusted primary key):
+gpg --show-keys --with-colons /tmp/stealth-factory.asc \
+  | awk -F: '$1 == "pub" { primary=1; next } primary && $1 == "fpr" { print $10; primary=0 }'
+# Compare the COMPLETE SET of primary fingerprints with the independently
+# announced approved set. Reject missing OR additional/unannounced primary keys.
+# No production fingerprint exists yet. Do not continue until one is announced.
 sudo install -d -m 0755 /etc/apt/keyrings
 sudo install -m 0644 /tmp/stealth-factory.asc /etc/apt/keyrings/stealth-factory.asc
 printf '%s\n' 'deb [arch=amd64 signed-by=/etc/apt/keyrings/stealth-factory.asc] https://stealth-factory.github.io/apt-repo stable main' \
@@ -34,7 +38,9 @@ opscope clocks
 ```
 
 `Signed-By` scopes this key to this source. Do not use `apt-key`,
-`trusted=yes`, or disable signature checks. Trusting the key authorizes its
+`trusted=yes`, or disable signature checks. Every primary key in that file is trusted by APT unless further restricted.
+Inspect all primary fingerprints, not merely whether the announced one appears.
+Trusting the key authorizes its
 holder to supply packages installed as root. HTTPS protects key transport;
 checking the announced fingerprint establishes which key you intended to trust.
 
@@ -56,11 +62,17 @@ from this shared repository. Package removal does not remove personal settings.
 
 ## How releases arrive
 
-The gated publishing workflow checks allowlisted upstream GitHub releases every
-hour and supports manual retry on `main`. A new stable release with a `.deb`
-and matching SHA-256 file is imported automatically after activation. No
-cross-repository token, webhook credential, or upstream workflow dispatch is
-needed. A missing asset pair fails clearly and leaves the live site unchanged.
+After activation, Opscope's successful release job sends a `repository_dispatch`
+to this repository using the existing Homebrew bot token (`GH_TOKEN`, falling
+back to `RELEASE_TOKEN`). The event carries only the allowlisted source, exact
+stable tag, and release commit. No secret is transmitted. The importer resolves
+that tag, verifies its commit and public release, and downloads only that
+version's `.deb` and checksum. A missing asset pair fails without changing the
+live site. Manual recovery on `main` requires an explicit package and tag.
+
+A separate Monday/Thursday refresh re-signs the already imported package indexes
+before their 14-day expiry. It never discovers or imports new releases. No new
+credential or expanded account permission is configured by this implementation.
 
 `packages.json` defines the explicitly supported applications. Adding another
 application is a reviewed change to this allowlist, dependency policy, package

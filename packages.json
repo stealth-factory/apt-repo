@@ -3,6 +3,25 @@
     "repository": "stealth-factory/opscope",
     "architecture": "amd64",
     "depends": "libc6 (>= 2.35), libgcc-s1",
-    "private_directory": "usr/libexec/opscope"
+    "private_directory": "usr/libexec/opscope",
+    "binaries": [
+      "agent-usage",
+      "clocks",
+      "github",
+      "github-actions",
+      "github-prs",
+      "herdr-panes",
+      "latency",
+      "linear",
+      "link",
+      "luvus-panes",
+      "matrix",
+      "months",
+      "netwatch",
+      "opscope",
+      "ports",
+      "tailnet",
+      "vercel-deployments"
+    ]
   }
 }

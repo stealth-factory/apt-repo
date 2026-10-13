@@ -34,21 +34,42 @@ These are separate owner-approved activation actions, not implemented setup:
    writes appropriately; do not grant new long-lived tokens or deploy keys.
    If organization policy blocks the built-in token, stop for approval rather
    than introducing a more privileged credential.
-5. Set repository variable `APT_PUBLISH_ENABLED=true` only after the above is
-   approved. Dispatch `publish.yml` on `main` and approve the protected
+5. Set repository variable `APT_PUBLISH_ENABLED=true` in both apt-repo and
+   opscope only after the above is
+   approved. Dispatch `publish.yml` on `main` with package `opscope` and its exact released
+   `vX.Y.Z` tag, and approve the protected
    environment. This performs the first **public package publication**.
 
-Required reviewers may mean each scheduled reconciliation needs approval. The
+Required reviewers may mean each release or scheduled metadata refresh needs approval. The
 owner decides whether to approve each run or authorize unattended publication;
 changing that protection is another access decision. With no enable variable,
 all publishing jobs are skipped and PR tests have read-only permissions.
 
 ## Publication contract
 
-The workflow only imports stable public releases from `packages.json`. Incoming
+Opscope's `apt-repository` job depends on successful release asset publication
+and uses the same `secrets.GH_TOKEN || secrets.RELEASE_TOKEN` pattern as Homebrew.
+Read-only inspection verified an existing `GH_TOKEN` secret name; secret values
+were neither read nor changed. The owner reports its bot already has access to
+both repositories. Its actual dispatch capability will be exercised only in an
+approved release run; this task does not retrieve the secret or send a live event.
+
+The [repository_dispatch endpoint](https://docs.github.com/en/rest/repos/repos#create-a-repository-dispatch-event)
+requires Contents write for fine-grained tokens (classic tokens require repo
+scope), avoiding a new Actions-write grant. Do not mint a new token or broaden
+access if a dispatch fails; report the API error and verify the existing bot's
+configured access with the owner. Only source/tag/commit travel in the payload;
+signing material stays in the apt-publishing environment.
+
+The workflow only imports the exact stable public release requested by a
+validated dispatch or explicit manual recovery, from `packages.json`. The tag
+must resolve to the dispatched commit. A Monday/Thursday schedule only refreshes
+retained metadata, leaving at least ten days of margin before its 14-day expiry
+when runs succeed. It never queries latest releases. Empty initial state fails
+closed on a refresh; bootstrap by importing an explicit approved release. Incoming
 checksums must name exactly the expected package; control metadata must match
-the approved name, architecture, version and dependencies. Unexpected maintainer
-scripts, symlinks, setuid files and files outside the application's private
+the approved name, architecture, version and dependencies. Unexpected relationships, non-root ownership, writable/special file or directory
+modes, maintainer scripts, symlinks, setuid files and files outside the application's private
 layout are refused. A checksum alongside a release detects corruption; it does
 not independently authenticate a compromised upstream maintainer account.
 
@@ -56,13 +77,15 @@ All retained packages are revalidated before indexing. Neither packages nor
 by-hash indexes are deleted automatically. Packages and metadata are signed in
 a temporary GnuPG home outside `site`, then the exported public key verifies
 both signatures. No private keyring enters `apt-state` or Pages artifacts.
+The payload and its embedded inventory must match the repository-owned approved
+binary list; an artifact cannot define its own expected coverage.
 The signed snapshot is tested in clean Ubuntu 22.04 and Debian 12 containers,
 including rejection of tampered signed metadata. If multiple versions exist,
 APT installs the previous version and upgrades to the latest. The first release
 can prove clean install only; upgrade evidence needs a second release.
 
 The workflow persists the complete verified snapshot before deployment. If
-Pages fails, the next hourly/manual run restores that same package history,
+Pages fails, the next scheduled/manual run restores that same package history,
 regenerates and resigns metadata, and retries the full deployment. The public
 site remains at its last deployed snapshot until Pages succeeds. Never force
 push `apt-state`: an unexpected concurrent write should fail and be reconciled.
@@ -74,6 +97,23 @@ release cannot replace a newer retained version. A same-version retry must have
 identical bytes. Release metadata expires after 14 days; monitor failed runs and
 restore signing/publication before then. APT should fail closed on expired data.
 
+## Metadata freshness and signing-key expiry
+
+`Valid-Until` is an APT metadata policy, not a requirement to replace or renew a
+signing key every fourteen days. The code chooses a 14-day window to bound how
+long an attacker or stale mirror can replay an old signed package index while
+leaving recovery time for missed runs. The Monday/Thursday refresh normally
+leaves at least ten days of margin. This is a configurable design choice, not
+an APT mandate; this implementation retains it unless the owner explicitly
+approves a different freshness/security policy. Without it, an old correctly
+signed index could remain acceptable indefinitely while the key is trusted.
+
+The repository signs central Release metadata covering all package indexes,
+which in turn hash the package bytes. Applications do not each require a new
+signing key. The repository's OpenPGP key has its own owner-selected expiry and
+renewal policy. Refreshing Release metadata does not extend the key's expiry;
+a valid key is needed for every refresh, and key rotation remains separate.
+
 ## Recovery and key rotation
 
 For a failed download or invalid package, fix upstream and publish a new version.
@@ -84,8 +124,10 @@ cannot be imported; release the packaging implementation first.
 
 For planned key rotation, get approval for the new key and custody model first.
 Announce the new fingerprint independently and publish a reviewed key bundle
-containing both old and new public keys while metadata is still signed by the
-old key. Existing users must refresh their scoped key file during this overlap;
+containing exactly the old and new public keys while metadata is still signed by the
+old key. Announce the complete approved primary-fingerprint set independently;
+users must reject a downloaded bundle containing any extra or missing primary
+key. Existing users must refresh their scoped key file during this overlap;
 there is no automatic keyring-package rotation yet. After the migration window,
 update the protected signing secret and fingerprint, test the signed snapshot,
 and switch signatures. Retain the old public key and its revocation statement

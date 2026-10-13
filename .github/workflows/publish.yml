@@ -1,10 +1,23 @@
 name: Publish signed APT repository
 
 on:
-  # Reconcile public upstream releases without a cross-repository write token.
+  repository_dispatch:
+    types: [opscope-release]
+  # Refresh signed metadata before its 14-day expiry, even without releases.
+  # This never discovers or imports new versions.
   schedule:
-    - cron: '23 * * * *'
+    - cron: '23 5 * * 1,4'
   workflow_dispatch:
+    inputs:
+      package:
+        type: choice
+        options: [opscope]
+        default: opscope
+        required: true
+      tag:
+        description: 'Exact published stable tag, e.g. v1.2.3'
+        type: string
+        required: true
 
 permissions:
   contents: read
@@ -44,13 +57,12 @@ jobs:
             git -C site init -b apt-state
             git -C site remote add origin "$remote"
           fi
-      - name: Import published releases and regenerate indexes
+      - name: Import the exact dispatched release or refresh existing indexes
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python3 scripts/repository.py fetch
-          python3 scripts/repository.py index
+          python3 scripts/prepare.py
       - name: Sign and verify using the approved key
         env:
           APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}

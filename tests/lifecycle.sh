@@ -28,9 +28,10 @@ case "$stamp" in "opscope $latest ("*) ;; *) exit 1;; esac
 # Minimal images may exclude installed documentation. Read the packaged list.
 dpkg-deb --fsys-tarfile "/repo/pool/main/opscope/opscope_${latest}_amd64.deb" \
   | tar -xOf - ./usr/share/doc/opscope/binaries > /tmp/binaries
+diff -u /tests/opscope-binaries /tmp/binaries
 while read -r binary; do
   test "$(/usr/libexec/opscope/"$binary" --version)" = "$binary ${stamp#opscope }"
-done < /tmp/binaries
+done < /tests/opscope-binaries
 opscope clocks --help | grep -qi clocks
 test "$(sha256sum /usr/bin/link)" = "$before"
 dpkg -V opscope
@@ -38,13 +39,5 @@ dpkg -r opscope
 test ! -e /usr/bin/opscope
 test ! -e /usr/libexec/opscope
 test "$(sha256sum /usr/bin/link)" = "$before"
-# Authentication must fail if the advertised repository loses its signature.
-# This is tested with a copied snapshot; the input remains read-only.
-cp -r /repo /tmp/tampered
-sed -i 's/^Origin:.*/Origin: Tampered/' /tmp/tampered/dists/stable/InRelease
-sed -i 's|file:/repo|file:/tmp/tampered|' /etc/apt/sources.list.d/stealth-factory.list
-rm -rf /var/lib/apt/lists/*
-if apt-get update -o APT::Update::Error-Mode=any; then
-  echo 'ERROR: APT accepted tampered signed metadata' >&2
-  exit 1
-fi
+# Test authentication independently of distro mirror availability.
+bash /tests/authentication.sh /repo /etc/apt/keyrings/stealth-factory.asc

@@ -50,6 +50,12 @@ def inspect(file, name, release, config):
                             ('Depends', config['depends'])]:
         if run('dpkg-deb', '-f', str(file), field) != expected:
             raise ValueError(f'Unexpected {field} in {file.name}')
+    relationships = ['Pre-Depends', 'Recommends', 'Suggests', 'Enhances',
+                     'Conflicts', 'Breaks', 'Replaces', 'Provides',
+                     'Built-Using', 'Static-Built-Using']
+    for field in relationships:
+        if run('dpkg-deb', '-f', str(file), field) != config.get('relationships', {}).get(field, ''):
+            raise ValueError(f'Unapproved relationship {field} in {file.name}')
     # These applications need no package hooks or global config modifications.
     # Reject an upstream asset that unexpectedly adds privileged install code.
     control = subprocess.check_output(['dpkg-deb', '--ctrl-tarfile', str(file)])
@@ -61,8 +67,17 @@ def inspect(file, name, release, config):
             if not member.isfile() or member_name not in ('control', 'md5sums'):
                 raise ValueError(f'Unexpected control member: {member.name}')
     data = subprocess.check_output(['dpkg-deb', '--fsys-tarfile', str(file)])
+    expected = sorted(config['binaries'])
+    if not expected or len(set(expected)) != len(expected):
+        raise ValueError('Invalid approved binary inventory')
+    actual = []
+    manifest = None
     with tarfile.open(fileobj=io.BytesIO(data)) as archive:
         for member in archive:
+            if member.uid != 0 or member.gid != 0 or member.mode & 0o7022:
+                raise ValueError(f'Unsafe ownership or mode: {member.name}')
+            if member.isdir() and member.mode & 0o555 != 0o555:
+                raise ValueError(f'Unsearchable package directory: {member.name}')
             member_name = member.name.removeprefix('./').rstrip('/')
             if member_name.startswith('/') or '..' in member_name.split('/'):
                 raise ValueError('Unsafe package path')
@@ -71,8 +86,19 @@ def inspect(file, name, release, config):
                 member_name.startswith(root + '/') for root in roots)
             directory = member.isdir() and (member_name in ('', '.', 'usr', 'usr/bin', 'usr/libexec', 'usr/share', 'usr/share/doc') or
                                            any(member_name == root or member_name.startswith(root + '/') for root in roots))
-            if not directory and not (member.isfile() and allowed and not member.mode & 0o6000):
+            if not directory and not (member.isfile() and allowed):
                 raise ValueError(f'Unexpected data member: {member.name}')
+            if member.isfile() and (member_name == f'usr/bin/{name}' or member_name.startswith(config['private_directory'] + '/')):
+                if member.mode & 0o555 != 0o555:
+                    raise ValueError(f'Non-executable package binary: {member.name}')
+                if member_name.startswith(config['private_directory'] + '/'):
+                    actual.append(member_name.removeprefix(config['private_directory'] + '/'))
+            if member.isfile() and member_name == f'usr/share/doc/{name}/binaries':
+                if manifest is not None:
+                    raise ValueError('Duplicate binary manifest')
+                manifest = archive.extractfile(member).read().decode().splitlines()
+    if sorted(actual) != expected or manifest != expected:
+        raise ValueError('Package binaries and manifest must match approved binary inventory')
 
 
 def inventory(site):
@@ -114,25 +140,35 @@ def import_package(site, incoming, name, release):
     return True
 
 
-def fetch_latest(site, incoming):
-    for name, config in registry().items():
-        repo = config['repository']
-        release = json.loads(run('gh', 'api', f'repos/{repo}/releases/latest'))
-        if release['draft'] or release['prerelease']:
-            raise ValueError('Latest release is not stable and published')
-        tag = release['tag_name']
-        if not tag.startswith('v'):
-            raise ValueError('Expected v-prefixed release tag')
-        value = tag[1:]
-        version(value)
-        filename = f'{name}_{value}_{config["architecture"]}.deb'
-        assets = {asset['name'] for asset in release['assets']}
-        if filename not in assets or filename + '.sha256' not in assets:
-            # The first packaging release may not exist yet. An incomplete
-            # newer release must never silently displace a published package.
-            raise ValueError(f'{repo} {tag} has no complete Debian asset pair')
-        folder = incoming / name
-        folder.mkdir(parents=True)
+def fetch_release(site, incoming, name, tag, expected_commit=None):
+    config = registry()[name]
+    if not tag.startswith('v'):
+        raise ValueError('Expected v-prefixed release tag')
+    version(tag[1:])
+    if expected_commit is not None and not re.fullmatch(r'[0-9a-f]{40}', expected_commit):
+        raise ValueError('Expected exact release commit SHA')
+    repo = config['repository']
+    release = json.loads(run('gh', 'api', f'repos/{repo}/releases/tags/{tag}'))
+    if release['draft'] or release['prerelease']:
+        raise ValueError('Release is not stable and published')
+    if release['tag_name'] != tag:
+        raise ValueError('Release tag does not match requested tag')
+    commit = run('gh', 'api', f'repos/{repo}/commits/{tag}', '--jq', '.sha')
+    if not re.fullmatch(r'[0-9a-f]{40}', commit) or (expected_commit and commit != expected_commit):
+        raise ValueError('Release tag does not match requested commit')
+    if not tag.startswith('v'):
+        raise ValueError('Expected v-prefixed release tag')
+    value = tag[1:]
+    version(value)
+    filename = f'{name}_{value}_{config["architecture"]}.deb'
+    assets = {asset['name'] for asset in release['assets']}
+    if filename not in assets or filename + '.sha256' not in assets:
+        # The first packaging release may not exist yet. An incomplete
+        # newer release must never silently displace a published package.
+        raise ValueError(f'{repo} {tag} has no complete Debian asset pair')
+    incoming.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=name + '-', dir=incoming) as directory:
+        folder = Path(directory)
         subprocess.check_call(['gh', 'release', 'download', tag, '--repo', repo,
                                '--pattern', filename, '--pattern', filename + '.sha256',
                                '--dir', str(folder)])
@@ -225,11 +261,15 @@ def main():
     parser.add_argument('--incoming', type=Path, default=Path('incoming'))
     parser.add_argument('--package', choices=list(registry()))
     parser.add_argument('--version')
+    parser.add_argument('--tag')
+    parser.add_argument('--commit')
     args = parser.parse_args()
     site = args.site.resolve()
     site.mkdir(parents=True, exist_ok=True)
     if args.command == 'fetch':
-        fetch_latest(site, args.incoming.resolve())
+        if not args.package or not args.tag:
+            parser.error('fetch requires --package and --tag')
+        fetch_release(site, args.incoming.resolve(), args.package, args.tag, args.commit)
     elif args.command == 'import':
         if not args.package or not args.version:
             parser.error('import requires --package and --version')
