@@ -1,4 +1,6 @@
 import io
+import datetime
+from email.utils import parsedate_to_datetime
 import json
 import tarfile
 from unittest.mock import patch
@@ -274,7 +276,10 @@ esac
         self.assertTrue((binary / 'by-hash/SHA256' / old_hash).exists())
         release = (self.site / 'dists/stable/Release').read_text()
         self.assertIn('Acquire-By-Hash: yes', release)
-        self.assertIn('Valid-Until:', release)
+        expiry = next(line.removeprefix('Valid-Until: ') for line in release.splitlines() if line.startswith('Valid-Until: '))
+        remaining = parsedate_to_datetime(expiry) - datetime.datetime.now(datetime.timezone.utc)
+        self.assertGreater(remaining.total_seconds(), 60 * 86400 - 60)
+        self.assertLessEqual(remaining.total_seconds(), 60 * 86400)
         self.assertIn(r.checksum(binary / 'Packages'), release)
         self.assertFalse((self.site / 'dists/stable/InRelease').exists())
 

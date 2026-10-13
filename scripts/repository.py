@@ -193,7 +193,7 @@ def indexes(site):
         shutil.copyfile(file, dest)
     for name in ['Release', 'InRelease', 'Release.gpg']:
         (dist / name).unlink(missing_ok=True)
-    expires = format_datetime(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14), usegmt=True)
+    expires = format_datetime(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=60), usegmt=True)
     options = {
         'Origin': 'Stealth Factory', 'Label': 'Stealth Factory',
         'Suite': 'stable', 'Codename': 'stable', 'Architectures': 'amd64',

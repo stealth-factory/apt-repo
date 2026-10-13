@@ -31,6 +31,12 @@ class PrepareTests(unittest.TestCase):
             fetch.assert_not_called()
             indexes.assert_called_once_with(Path(root).resolve())
 
+    def test_metadata_refresh_is_monthly_and_release_dispatch_is_immediate(self):
+        workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/publish.yml').read_text()
+        self.assertEqual(workflow.count('cron:'), 1)
+        self.assertIn("cron: '23 5 1 * *'", workflow)
+        self.assertIn('repository_dispatch:\n    types: [opscope-release]', workflow)
+
     def test_manual_recovery_requires_exact_package_and_tag(self):
         self.assertEqual(prepare.request('workflow_dispatch', {'inputs': {'package': 'opscope', 'tag': 'v1.2.3'}}), ('opscope', 'v1.2.3', None))
         for inputs in [{}, {'package': 'other', 'tag': 'v1.2.3'}, {'package': 'opscope', 'tag': 'latest'}]:

@@ -63,9 +63,10 @@ signing material stays in the apt-publishing environment.
 
 The workflow only imports the exact stable public release requested by a
 validated dispatch or explicit manual recovery, from `packages.json`. The tag
-must resolve to the dispatched commit. A Monday/Thursday schedule only refreshes
-retained metadata, leaving at least ten days of margin before its 14-day expiry
-when runs succeed. It never queries latest releases. Empty initial state fails
+must resolve to the dispatched commit. A monthly schedule only refreshes
+retained metadata, leaving at least 29 days of margin before its 60-day expiry
+when runs succeed. A missed run needs recovery before expiry; 60 days does
+not guarantee coverage of every possible pair of skipped calendar-month intervals. It never queries latest releases. Empty initial state fails
 closed on a refresh; bootstrap by importing an explicit approved release. Incoming
 checksums must name exactly the expected package; control metadata must match
 the approved name, architecture, version and dependencies. Unexpected relationships, non-root ownership, writable/special file or directory
@@ -94,16 +95,16 @@ Immutable package URLs and retained by-hash indexes let clients finish downloads
 using older cached indexes across deployments. The workflow has one shared
 concurrency group and does not cancel a running publication. An older upstream
 release cannot replace a newer retained version. A same-version retry must have
-identical bytes. Release metadata expires after 14 days; monitor failed runs and
+identical bytes. Release metadata expires after 60 days; monitor failed runs and
 restore signing/publication before then. APT should fail closed on expired data.
 
 ## Metadata freshness and signing-key expiry
 
 `Valid-Until` is an APT metadata policy, not a requirement to replace or renew a
-signing key every fourteen days. The code chooses a 14-day window to bound how
+signing key every sixty days. The owner approved a 60-day window to bound how
 long an attacker or stale mirror can replay an old signed package index while
-leaving recovery time for missed runs. The Monday/Thursday refresh normally
-leaves at least ten days of margin. This is a configurable design choice, not
+leaving recovery time for missed runs. The monthly refresh normally
+leaves at least 29 days of margin. This is a configurable design choice, not
 an APT mandate; this implementation retains it unless the owner explicitly
 approves a different freshness/security policy. Without it, an old correctly
 signed index could remain acceptable indefinitely while the key is trusted.

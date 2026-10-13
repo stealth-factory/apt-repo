@@ -70,8 +70,8 @@ that tag, verifies its commit and public release, and downloads only that
 version's `.deb` and checksum. A missing asset pair fails without changing the
 live site. Manual recovery on `main` requires an explicit package and tag.
 
-A separate Monday/Thursday refresh re-signs the already imported package indexes
-before their 14-day expiry. It never discovers or imports new releases. No new
+A separate monthly refresh re-signs the already imported package indexes
+before their 60-day expiry. It never discovers or imports new releases. No new
 credential or expanded account permission is configured by this implementation.
 
 `packages.json` defines the explicitly supported applications. Adding another
@@ -84,7 +84,7 @@ are immutable per version; a same-version change or downgrade fails. The
 workflow serializes all applications' updates, verifies checksums and package
 metadata, signs both `InRelease` and `Release.gpg`, tests the exported public
 key through APT, then deploys a complete Pages snapshot. Indexes expire after
-14 days and are refreshed by successful scheduled runs.
+60 days and are refreshed by successful scheduled runs.
 
 See [operations](docs/operations.md) for permissions, signing, failure handling,
 key rotation, storage limits, and validation gaps.
