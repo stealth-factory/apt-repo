@@ -9,8 +9,10 @@ Implementation starts in a draft PR linked to
 [OPS-67](https://linear.app/stealth-company/issue/OPS-67) and
 [opscope #392](https://github.com/stealth-factory/opscope/pull/392).
 
-No private key generation, credential configuration, owner-controlled access changes, live
-publication, or merge is included without separate approval.
+The optional [GitHub-only setup](docs/github-key-setup.md) requires explicit
+manual confirmation and a separately approved temporary environment-write token.
+No private key is generated during implementation or tests. Credential grants,
+owner-controlled access changes, live publication, and merges require approval.
 
 The publishing workflow requests job-scoped token permissions. Those permissions
 require the owner approval described in [operations](docs/operations.md) before

@@ -17,7 +17,9 @@ These are separate owner-approved activation actions, not implemented setup:
    older releases do not contain the required `.deb` assets.
 2. Create or select a dedicated OpenPGP repository signing key under the owner's
    custody, with an offline backup and revocation certificate. Set its expiry
-   and renewal policy. The code never generates a key. The current unattended
+   and renewal policy. For GitHub-only custody, use the separately approved
+   [one-time setup workflow](github-key-setup.md). The publisher never generates
+   a key. The current unattended
    signing interface expects an export usable by batch GnuPG without a
    passphrase prompt (for example a dedicated exported signing subkey). Approve
    this custody model before supplying it; hardware/remote signing would need
