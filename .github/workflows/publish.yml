@@ -29,9 +29,9 @@ concurrency:
 
 jobs:
   publish:
-    # Explicit activation plus an environment approval boundary. Configure
-    # required reviewers on apt-publishing before setting the enable variable.
-    if: github.ref == 'refs/heads/main' && vars.APT_PUBLISH_ENABLED == 'true'
+    # Run every configured event on main; publishing protection belongs to
+    # the apt-publishing environment and the signing/verification steps.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04
     environment: apt-publishing
     permissions:
