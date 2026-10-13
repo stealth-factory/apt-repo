@@ -278,8 +278,8 @@ esac
         self.assertIn('Acquire-By-Hash: yes', release)
         expiry = next(line.removeprefix('Valid-Until: ') for line in release.splitlines() if line.startswith('Valid-Until: '))
         remaining = parsedate_to_datetime(expiry) - datetime.datetime.now(datetime.timezone.utc)
-        self.assertGreater(remaining.total_seconds(), 60 * 86400 - 60)
-        self.assertLessEqual(remaining.total_seconds(), 60 * 86400)
+        self.assertGreater(remaining.total_seconds(), 90 * 86400 - 60)
+        self.assertLessEqual(remaining.total_seconds(), 90 * 86400)
         self.assertIn(r.checksum(binary / 'Packages'), release)
         self.assertFalse((self.site / 'dists/stable/InRelease').exists())
 

@@ -3,7 +3,7 @@ name: Publish signed APT repository
 on:
   repository_dispatch:
     types: [opscope-release]
-  # Refresh signed metadata before its 60-day expiry, even without releases.
+  # Refresh signed metadata before its 90-day expiry, even without releases.
   # This never discovers or imports new versions.
   schedule:
     - cron: '23 5 1 * *'
