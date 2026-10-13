@@ -70,8 +70,10 @@ that tag, verifies its commit and public release, and downloads only that
 version's `.deb` and checksum. A missing asset pair fails without changing the
 live site. Manual recovery on `main` requires an explicit package and tag.
 
-A separate monthly refresh re-signs the already imported package indexes
-before their 90-day expiry. It never discovers or imports new releases. No new
+For schedule testing, a separate refresh temporarily runs daily at **19:30
+Asia/Taipei (11:30 UTC)** and re-signs the already imported package indexes
+before their unchanged 90-day expiry. After testing, restore the monthly
+schedule (`23 5 1 * *`) through a reviewed change. It never discovers or imports new releases. No new
 credential or expanded account permission is configured by this implementation.
 
 `packages.json` defines the explicitly supported applications. Adding another
