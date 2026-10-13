@@ -1,0 +1,8 @@
+{
+  "opscope": {
+    "repository": "stealth-factory/opscope",
+    "architecture": "amd64",
+    "depends": "libc6 (>= 2.35), libgcc-s1",
+    "private_directory": "usr/libexec/opscope"
+  }
+}

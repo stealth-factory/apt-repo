@@ -1,0 +1,84 @@
+name: Publish signed APT repository
+
+on:
+  # Reconcile public upstream releases without a cross-repository write token.
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apt-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Explicit activation plus an environment approval boundary. Configure
+    # required reviewers on apt-publishing before setting the enable variable.
+    if: github.ref == 'refs/heads/main' && vars.APT_PUBLISH_ENABLED == 'true'
+    runs-on: ubuntu-22.04
+    environment: apt-publishing
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Install repository tools
+        run: sudo apt-get update && sudo apt-get install -y apt-utils gnupg
+      - name: Restore immutable package history
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          remote="https://github.com/${REPOSITORY}.git"
+          refs=$(git ls-remote --heads "$remote" refs/heads/apt-state)
+          if [ -n "$refs" ]; then
+            git clone --single-branch --branch apt-state "$remote" site
+          else
+            mkdir site
+            git -C site init -b apt-state
+            git -C site remote add origin "$remote"
+          fi
+      - name: Import published releases and regenerate indexes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/repository.py fetch
+          python3 scripts/repository.py index
+      - name: Sign and verify using the approved key
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+          APT_SIGNING_FINGERPRINT: ${{ vars.APT_SIGNING_FINGERPRINT }}
+        run: python3 scripts/repository.py sign
+      - name: Verify signed APT installation and upgrades
+        run: |
+          set -euo pipefail
+          for image in ubuntu:22.04 debian:12; do
+            docker run --rm -v "$PWD/site:/repo:ro" -v "$PWD/tests:/tests:ro" \
+              "$image" bash /tests/lifecycle.sh
+          done
+      - name: Persist complete snapshot for retries
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git -C site config user.name 'github-actions[bot]'
+          git -C site config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C site add pool dists stealth-factory.asc .nojekyll
+          git -C site commit -m 'chore: refresh signed APT snapshot'
+          # No force push. Concurrent external changes fail rather than lose
+          # another application's packages. The next run restores that state.
+          git -C site -c credential.helper='!gh auth git-credential' push origin HEAD:apt-state
+          rm -rf site/.git
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
+        with:
+          path: site
+      - name: Deploy the verified snapshot
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

@@ -1,0 +1,22 @@
+name: Test repository tooling
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y apt-utils
+      - run: python3 -m unittest discover -s tests -v
+      - name: No credential-generation code or tracked private key
+        run: |
+          set -euo pipefail
+          if git grep -n -E -- '-----BEGIN (PGP PRIVATE KEY|OPENSSH PRIVATE KEY|RSA PRIVATE KEY)'; then
+            exit 1
+          fi
