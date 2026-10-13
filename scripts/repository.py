@@ -188,9 +188,13 @@ def indexes(site):
     # Keep old by-hash objects so cached metadata can still fetch its exact
     # index while a new snapshot propagates. Pool objects are immutable too.
     for file in (binary / 'Packages', binary / 'Packages.gz'):
-        dest = binary / 'by-hash/SHA256' / checksum(file)
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(file, dest)
+        # Release advertises both strong algorithms. Serve either preference
+        # through immutable URLs instead of relying on mutable-path fallback.
+        for algorithm in ('sha256', 'sha512'):
+            digest = hashlib.new(algorithm, file.read_bytes()).hexdigest()
+            dest = binary / 'by-hash' / algorithm.upper() / digest
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(file, dest)
     for name in ['Release', 'InRelease', 'Release.gpg']:
         (dist / name).unlink(missing_ok=True)
     expires = format_datetime(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=90), usegmt=True)

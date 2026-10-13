@@ -1,4 +1,5 @@
 import io
+import hashlib
 import datetime
 from email.utils import parsedate_to_datetime
 import json
@@ -266,6 +267,7 @@ esac
         r.indexes(self.site)
         binary = self.site / 'dists/stable/main/binary-amd64'
         old_hash = r.checksum(binary / 'Packages')
+        old_sha512 = hashlib.sha512((binary / 'Packages').read_bytes()).hexdigest()
         self.package('1.2.4')
         r.import_package(self.site, self.incoming, 'opscope', '1.2.4')
         r.indexes(self.site)
@@ -274,6 +276,12 @@ esac
         self.assertIn('Version: 1.2.4', content)
         self.assertIn('Filename: pool/main/opscope/opscope_1.2.4_amd64.deb', content)
         self.assertTrue((binary / 'by-hash/SHA256' / old_hash).exists())
+        self.assertTrue((binary / 'by-hash/SHA512' / old_sha512).exists())
+        for algorithm in ['sha256', 'sha512']:
+            for name in ['Packages', 'Packages.gz']:
+                contents = (binary / name).read_bytes()
+                digest = hashlib.new(algorithm, contents).hexdigest()
+                self.assertEqual((binary / 'by-hash' / algorithm.upper() / digest).read_bytes(), contents)
         release = (self.site / 'dists/stable/Release').read_text()
         self.assertIn('Acquire-By-Hash: yes', release)
         expiry = next(line.removeprefix('Valid-Until: ') for line in release.splitlines() if line.startswith('Valid-Until: '))
