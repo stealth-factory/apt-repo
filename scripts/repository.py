@@ -3,6 +3,7 @@
 import argparse
 import datetime
 import gzip
+from email.utils import format_datetime
 import hashlib
 import io
 import json
@@ -156,12 +157,12 @@ def indexes(site):
         shutil.copyfile(file, dest)
     for name in ['Release', 'InRelease', 'Release.gpg']:
         (dist / name).unlink(missing_ok=True)
-    expires = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14)).strftime('%a, %d %b %Y %H:%M:%S UTC')
+    expires = format_datetime(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14), usegmt=True)
     options = {
         'Origin': 'Stealth Factory', 'Label': 'Stealth Factory',
         'Suite': 'stable', 'Codename': 'stable', 'Architectures': 'amd64',
         'Components': 'main', 'Description': 'Stealth Factory application packages',
-        'Acquire-By-Hash': 'yes', 'Valid-Until': expires,
+        'Acquire-By-Hash': 'yes',
     }
     command = ['apt-ftparchive']
     for key, value in options.items():
@@ -169,7 +170,10 @@ def indexes(site):
     # Exclude by-hash retention files from the Release checksum inventory.
     command += ['-o', 'APT::FTPArchive::Release::Patterns::=main/binary-amd64/Packages*',
                 'release', 'dists/stable']
-    (dist / 'Release').write_bytes(subprocess.check_output(command, cwd=site))
+    # Ubuntu 22.04's apt-ftparchive ignores the Valid-Until option.
+    # Add it explicitly before signing, so expiration is never optional.
+    release = subprocess.check_output(command, cwd=site)
+    (dist / 'Release').write_bytes(f'Valid-Until: {expires}\n'.encode() + release)
     (site / '.nojekyll').touch()
 
 
