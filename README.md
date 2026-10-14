@@ -74,10 +74,9 @@ live site. Manual recovery on `main` requires an explicit package and tag.
 No enable flag is required. Signing and hosting must still be configured before
 publication can succeed; missing setup fails the run rather than skipping it.
 
-For schedule testing, a separate refresh temporarily runs daily at **19:30
-Asia/Taipei (11:30 UTC)** and re-signs the already imported package indexes
-before their unchanged 90-day expiry. After testing, restore the monthly
-schedule (`23 5 1 * *`) through a reviewed change. It never discovers or imports new releases. No new
+A separate refresh runs on the **1st of each month at 19:30 Asia/Taipei
+(11:30 UTC, `30 11 1 * *`)** and re-signs the already imported package indexes
+before their 90-day expiry. It never discovers or imports new releases. No new
 credential or expanded account permission is configured by this implementation.
 
 `packages.json` defines the explicitly supported applications. Adding another
