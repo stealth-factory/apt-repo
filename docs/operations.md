@@ -41,6 +41,15 @@ These are separate owner-approved activation actions, not implemented setup:
    environment. This performs the first **public package publication**. Future
    successful tagged Opscope releases notify this repository automatically.
 
+gh-pr-manager reuses the same signing key, `apt-publishing` environment,
+Pages site and `apt-state` history; it needs no new secret or variable here.
+Its release workflow (`apt-repository` job, `debian/notify-apt.js`) sends
+`gh-pr-manager-release` with `secrets.GH_TOKEN || secrets.RELEASE_TOKEN` from
+`stealth-factory/gh-pr-manager`, so that repository must hold one of those
+secrets for a bot with Contents write on `stealth-factory/apt-repo`. Its first
+publication can be either that dispatch from a new tag carrying the Debian
+assets or a manual `publish.yml` run with package `gh-pr-manager`.
+
 Required reviewers may mean each release or scheduled metadata refresh needs approval. The
 owner decides whether to approve each run or authorize unattended publication;
 changing that protection is another access decision. There is no enable-variable
@@ -67,8 +76,9 @@ so a new dispatch does not overtake the versions being replayed.
 
 ## Publication contract
 
-Opscope's `apt-repository` job depends on successful release asset publication
-and uses the same `secrets.GH_TOKEN || secrets.RELEASE_TOKEN` pattern as Homebrew.
+Opscope's and gh-pr-manager's `apt-repository` jobs depend on successful release
+asset publication and use the same `secrets.GH_TOKEN || secrets.RELEASE_TOKEN`
+pattern as Homebrew.
 Read-only inspection verified an existing `GH_TOKEN` secret name; secret values
 were neither read nor changed. The owner reports its bot already has access to
 both repositories. Its actual dispatch capability will be exercised only in an
@@ -100,7 +110,9 @@ a temporary GnuPG home outside `site`, then the exported public key verifies
 both signatures. No private keyring enters `apt-state` or Pages artifacts.
 The payload and its embedded inventory must match the repository-owned approved
 binary list; an artifact cannot define its own expected coverage.
-The signed snapshot is tested in clean Ubuntu 22.04 and Debian 12 containers,
+The signed snapshot is tested in clean Ubuntu 22.04 and Debian 12 containers
+for every package present in the pool (a pool package without lifecycle
+coverage fails the run),
 including rejection of tampered signed metadata. If multiple versions exist,
 APT installs the previous version and upgrades to the latest. The first release
 can prove clean install only; upgrade evidence needs a second release.

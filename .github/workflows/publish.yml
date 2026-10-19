@@ -2,7 +2,8 @@ name: Publish signed APT repository
 
 on:
   repository_dispatch:
-    types: [opscope-release]
+    # One type per package, matching `dispatch` in packages.json.
+    types: [opscope-release, gh-pr-manager-release]
   # Monthly on the 1st at 19:30 Asia/Taipei (11:30 UTC).
   # Metadata expires after 90 days.
   # This never discovers or imports new versions.
@@ -12,7 +13,7 @@ on:
     inputs:
       package:
         type: choice
-        options: [opscope]
+        options: [opscope, gh-pr-manager]
         default: opscope
         required: true
       tag:
