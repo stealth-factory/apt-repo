@@ -67,11 +67,19 @@ def inspect(file, name, release, config):
             if not member.isfile() or member_name not in ('control', 'md5sums'):
                 raise ValueError(f'Unexpected control member: {member.name}')
     data = subprocess.check_output(['dpkg-deb', '--fsys-tarfile', str(file)])
-    expected = sorted(config['binaries'])
-    if not expected or len(set(expected)) != len(expected):
+    # A private directory holds a reviewed multi-binary inventory (opscope).
+    # Without one the package is a single executable at /usr/bin/<name>.
+    private = config.get('private_directory')
+    expected = sorted(config.get('binaries', []))
+    if private is None:
+        if 'binaries' in config:
+            raise ValueError('Invalid approved binary inventory')
+    elif not expected or len(set(expected)) != len(expected):
         raise ValueError('Invalid approved binary inventory')
     actual = []
     manifest = None
+    launcher = False
+    roots = [root for root in (private, f'usr/share/doc/{name}') if root]
     with tarfile.open(fileobj=io.BytesIO(data)) as archive:
         for member in archive:
             if member.uid != 0 or member.gid != 0 or member.mode & 0o7022:
@@ -81,23 +89,28 @@ def inspect(file, name, release, config):
             member_name = member.name.removeprefix('./').rstrip('/')
             if member_name.startswith('/') or '..' in member_name.split('/'):
                 raise ValueError('Unsafe package path')
-            roots = [config['private_directory'], f'usr/share/doc/{name}']
+            in_private = private is not None and member_name.startswith(private + '/')
             allowed = member_name == f'usr/bin/{name}' or any(
                 member_name.startswith(root + '/') for root in roots)
             directory = member.isdir() and (member_name in ('', '.', 'usr', 'usr/bin', 'usr/libexec', 'usr/share', 'usr/share/doc') or
                                            any(member_name == root or member_name.startswith(root + '/') for root in roots))
             if not directory and not (member.isfile() and allowed):
                 raise ValueError(f'Unexpected data member: {member.name}')
-            if member.isfile() and (member_name == f'usr/bin/{name}' or member_name.startswith(config['private_directory'] + '/')):
+            if member.isfile() and (member_name == f'usr/bin/{name}' or in_private):
                 if member.mode & 0o555 != 0o555:
                     raise ValueError(f'Non-executable package binary: {member.name}')
-                if member_name.startswith(config['private_directory'] + '/'):
-                    actual.append(member_name.removeprefix(config['private_directory'] + '/'))
-            if member.isfile() and member_name == f'usr/share/doc/{name}/binaries':
+                if in_private:
+                    actual.append(member_name.removeprefix(private + '/'))
+                else:
+                    launcher = True
+            if private is not None and member.isfile() and member_name == f'usr/share/doc/{name}/binaries':
                 if manifest is not None:
                     raise ValueError('Duplicate binary manifest')
                 manifest = archive.extractfile(member).read().decode().splitlines()
-    if sorted(actual) != expected or manifest != expected:
+    if private is None:
+        if not launcher:
+            raise ValueError(f'Package must contain executable usr/bin/{name}')
+    elif sorted(actual) != expected or manifest != expected:
         raise ValueError('Package binaries and manifest must match approved binary inventory')
 
 

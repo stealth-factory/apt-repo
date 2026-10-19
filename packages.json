@@ -1,6 +1,7 @@
 {
   "opscope": {
     "repository": "stealth-factory/opscope",
+    "dispatch": "opscope-release",
     "architecture": "amd64",
     "depends": "libc6 (>= 2.35), libgcc-s1",
     "private_directory": "usr/libexec/opscope",
@@ -23,5 +24,11 @@
       "tailnet",
       "vercel-deployments"
     ]
+  },
+  "gh-pr-manager": {
+    "repository": "stealth-factory/gh-pr-manager",
+    "dispatch": "gh-pr-manager-release",
+    "architecture": "amd64",
+    "depends": "libc6 (>= 2.35), libgcc-s1"
   }
 }
