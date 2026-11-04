@@ -27,7 +27,7 @@ stamp=$(opscope --version)
 case "$stamp" in "opscope $latest ("*) ;; *) exit 1;; esac
 # Minimal images may exclude installed documentation. Read the packaged list.
 dpkg-deb --fsys-tarfile "/repo/pool/main/opscope/opscope_${latest}_amd64.deb" \
-  | tar -xOf - ./usr/share/doc/opscope/binaries > /tmp/binaries
+  | tar -xOf - ./usr/share/doc/opscope/binaries | tr -d '\r' > /tmp/binaries
 grep -Fxq opscope /tmp/binaries
 while IFS= read -r binary || [ -n "$binary" ]; do
   test "$(/usr/libexec/opscope/"$binary" --version)" = "$binary ${stamp#opscope }"
