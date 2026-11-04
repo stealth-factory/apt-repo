@@ -29,7 +29,7 @@ case "$stamp" in "opscope $latest ("*) ;; *) exit 1;; esac
 dpkg-deb --fsys-tarfile "/repo/pool/main/opscope/opscope_${latest}_amd64.deb" \
   | tar -xOf - ./usr/share/doc/opscope/binaries > /tmp/binaries
 grep -Fxq opscope /tmp/binaries
-while read -r binary; do
+while IFS= read -r binary || [ -n "$binary" ]; do
   test "$(/usr/libexec/opscope/"$binary" --version)" = "$binary ${stamp#opscope }"
 done < /tmp/binaries
 if grep -Fxq clocks /tmp/binaries; then opscope clocks --help | grep -qi clocks; fi
