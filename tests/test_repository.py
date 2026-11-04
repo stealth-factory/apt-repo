@@ -18,6 +18,9 @@ r = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(r)
 
 
+FIXTURE_BINARIES = ['clocks', 'github', 'link', 'opscope']
+
+
 class RepositoryTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -42,7 +45,7 @@ class RepositoryTests(unittest.TestCase):
         launcher.chmod(0o755)
         private = tree / 'usr/libexec/opscope'
         private.mkdir(parents=True)
-        approved = r.approved_binaries(r.registry()['opscope'], release)
+        approved = FIXTURE_BINARIES
         for binary in approved:
             file = private / binary
             file.write_text('#!/bin/sh\necho fixture\n')
@@ -66,21 +69,8 @@ class RepositoryTests(unittest.TestCase):
     def hash(self, file):
         Path(str(file) + '.sha256').write_text(f'{r.checksum(file)}  {file.name}\n')
 
-    def test_repository_owned_binary_lists_agree(self):
-        config = r.registry()['opscope']
-        expected = (r.ROOT / 'tests/opscope-binaries').read_text().splitlines()
-        self.assertEqual(expected, sorted(config['binaries'] + list(config['added'])))
-        self.assertEqual(len(expected), 20)
-
-    def test_added_binaries_apply_from_their_first_release(self):
-        config = r.registry()['opscope']
-        self.assertEqual(r.approved_binaries(config, '2.1.0'), sorted(config['binaries']))
-        self.assertIn('google-trends', r.approved_binaries(config, '2.3.0'))
-        self.assertNotIn('disk', r.approved_binaries(config, '2.4.0'))
-        self.assertEqual(r.approved_binaries(config, '2.5.0'),
-                         (r.ROOT / 'tests/opscope-binaries').read_text().splitlines())
-        with self.assertRaisesRegex(ValueError, 'Invalid approved binary inventory'):
-            r.approved_binaries(dict(config, added={'link': '2.5.0'}), '2.5.0')
+    def test_registry_requires_the_launcher_binary(self):
+        self.assertEqual(r.registry()['opscope']['required_binaries'], ['opscope'])
 
     def test_repeated_fetch_uses_clean_temporary_downloads(self):
         filename = 'opscope_1.2.3_amd64.deb'
@@ -118,7 +108,7 @@ class RepositoryTests(unittest.TestCase):
         config = r.registry()['opscope']
         fields = {'Package': 'opscope', 'Version': '1.2.3', 'Architecture': 'amd64',
                   'Depends': config['depends']}
-        def archive(mutate=None, omitted=None):
+        def archive(mutate=None, omitted=None, binaries=None, manifest=None):
             output = io.BytesIO()
             with tarfile.open(fileobj=output, mode='w') as tar:
                 names = ['./usr', './usr/bin', './usr/libexec', './usr/libexec/opscope']
@@ -126,9 +116,10 @@ class RepositoryTests(unittest.TestCase):
                     member = tarfile.TarInfo(name); member.type = tarfile.DIRTYPE; member.mode = 0o755
                     if mutate: mutate(member)
                     tar.addfile(member)
-                binaries = [b for b in config['binaries'] if b != omitted]
-                for name in ['usr/bin/opscope'] + ['usr/libexec/opscope/' + b for b in binaries] + ['usr/share/doc/opscope/binaries']:
-                    content = ('\n'.join(binaries) + '\n').encode() if name.endswith('/binaries') else b'executable'
+                shipped = [b for b in (binaries or FIXTURE_BINARIES) if b != omitted]
+                listed = shipped if manifest is None else manifest
+                for name in ['usr/bin/opscope'] + ['usr/libexec/opscope/' + b for b in shipped] + ['usr/share/doc/opscope/binaries']:
+                    content = ('\n'.join(listed) + '\n').encode() if name.endswith('/binaries') else b'executable'
                     member = tarfile.TarInfo('./' + name); member.mode = 0o755; member.size = len(content)
                     if mutate: mutate(member)
                     tar.addfile(member, io.BytesIO(content))
@@ -148,9 +139,20 @@ class RepositoryTests(unittest.TestCase):
                         if member.name == target: setattr(member, attribute, value)
                     with self.assertRaisesRegex(ValueError, 'ownership or mode'):
                         check(archive(mutate))
-        # Removing both a widget and its self-reported inventory entry must fail.
-        with self.assertRaisesRegex(ValueError, 'approved binary inventory'):
-            check(archive(omitted='link'))
+        # Widgets may be added or removed when the manifest says so.
+        check(archive(omitted='link'))
+        check(archive(binaries=sorted(FIXTURE_BINARIES + ['brand-new-widget'])))
+        # The manifest must describe exactly what ships.
+        with self.assertRaisesRegex(ValueError, 'match its binary manifest'):
+            check(archive(manifest=[b for b in FIXTURE_BINARIES if b != 'link']))
+        with self.assertRaisesRegex(ValueError, 'match its binary manifest'):
+            check(archive(manifest=sorted(FIXTURE_BINARIES + ['ghost'])))
+        with self.assertRaisesRegex(ValueError, 'match its binary manifest'):
+            check(archive(manifest=list(reversed(FIXTURE_BINARIES))))
+        with self.assertRaisesRegex(ValueError, 'Invalid binary name'):
+            check(archive(binaries=sorted(FIXTURE_BINARIES + ['Bad_Name'])))
+        with self.assertRaisesRegex(ValueError, 'missing a required binary'):
+            check(archive(omitted='opscope'))
 
     def test_tamper_probe_requires_good_baseline_and_signature_error(self):
         tools = self.root / 'tools'; tools.mkdir()
