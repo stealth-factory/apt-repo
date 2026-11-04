@@ -22,6 +22,11 @@
       "ports",
       "tailnet",
       "vercel-deployments"
-    ]
+    ],
+    "added": {
+      "google-trends": "2.3.0",
+      "disk": "2.5.0",
+      "rex-panes": "2.5.0"
+    }
   }
 }

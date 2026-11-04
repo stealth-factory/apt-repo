@@ -42,13 +42,14 @@ class RepositoryTests(unittest.TestCase):
         launcher.chmod(0o755)
         private = tree / 'usr/libexec/opscope'
         private.mkdir(parents=True)
-        for binary in r.registry()['opscope']['binaries']:
+        approved = r.approved_binaries(r.registry()['opscope'], release)
+        for binary in approved:
             file = private / binary
             file.write_text('#!/bin/sh\necho fixture\n')
             file.chmod(0o755)
         docs = tree / 'usr/share/doc/opscope'
         docs.mkdir(parents=True)
-        (docs / 'binaries').write_text('\n'.join(r.registry()['opscope']['binaries']) + '\n')
+        (docs / 'binaries').write_text('\n'.join(approved) + '\n')
         if extra:
             file = tree / extra
             file.parent.mkdir(parents=True, exist_ok=True)
@@ -66,9 +67,20 @@ class RepositoryTests(unittest.TestCase):
         Path(str(file) + '.sha256').write_text(f'{r.checksum(file)}  {file.name}\n')
 
     def test_repository_owned_binary_lists_agree(self):
+        config = r.registry()['opscope']
         expected = (r.ROOT / 'tests/opscope-binaries').read_text().splitlines()
-        self.assertEqual(expected, r.registry()['opscope']['binaries'])
-        self.assertEqual(len(expected), 17)
+        self.assertEqual(expected, sorted(config['binaries'] + list(config['added'])))
+        self.assertEqual(len(expected), 20)
+
+    def test_added_binaries_apply_from_their_first_release(self):
+        config = r.registry()['opscope']
+        self.assertEqual(r.approved_binaries(config, '2.1.0'), sorted(config['binaries']))
+        self.assertIn('google-trends', r.approved_binaries(config, '2.3.0'))
+        self.assertNotIn('disk', r.approved_binaries(config, '2.4.0'))
+        self.assertEqual(r.approved_binaries(config, '2.5.0'),
+                         (r.ROOT / 'tests/opscope-binaries').read_text().splitlines())
+        with self.assertRaisesRegex(ValueError, 'Invalid approved binary inventory'):
+            r.approved_binaries(dict(config, added={'link': '2.5.0'}), '2.5.0')
 
     def test_repeated_fetch_uses_clean_temporary_downloads(self):
         filename = 'opscope_1.2.3_amd64.deb'

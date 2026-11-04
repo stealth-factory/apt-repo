@@ -1,8 +1,10 @@
 agent-usage
 clocks
+disk
 github
 github-actions
 github-prs
+google-trends
 herdr-panes
 latency
 linear
@@ -13,5 +15,6 @@ months
 netwatch
 opscope
 ports
+rex-panes
 tailnet
 vercel-deployments

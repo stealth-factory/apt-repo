@@ -44,6 +44,20 @@ def registry():
     return json.loads((ROOT / 'packages.json').read_text())
 
 
+def approved_binaries(config, release):
+    """Binaries a release must ship: the base list plus those added by then.
+
+    Retained packages are revalidated on every run, so a widget added in a
+    later release must not become a requirement for older packages.
+    """
+    added = config.get('added', {})
+    if set(added) & set(config['binaries']):
+        raise ValueError('Invalid approved binary inventory')
+    current = version(release)
+    return sorted(config['binaries'] + [binary for binary, since in added.items()
+                                        if current >= version(since)])
+
+
 def inspect(file, name, release, config):
     for field, expected in [('Package', name), ('Version', release),
                             ('Architecture', config['architecture']),
@@ -67,7 +81,7 @@ def inspect(file, name, release, config):
             if not member.isfile() or member_name not in ('control', 'md5sums'):
                 raise ValueError(f'Unexpected control member: {member.name}')
     data = subprocess.check_output(['dpkg-deb', '--fsys-tarfile', str(file)])
-    expected = sorted(config['binaries'])
+    expected = approved_binaries(config, release)
     if not expected or len(set(expected)) != len(expected):
         raise ValueError('Invalid approved binary inventory')
     actual = []
