@@ -41,6 +41,15 @@ These are separate owner-approved activation actions, not implemented setup:
    environment. This performs the first **public package publication**. Future
    successful tagged Opscope releases notify this repository automatically.
 
+gh-manager-cli reuses the same signing key, `apt-publishing` environment,
+Pages site, and `apt-state` history. It needs no new secret or variable here.
+Its release workflow sends `gh-manager-cli-release` with
+`secrets.GH_TOKEN || secrets.RELEASE_TOKEN` from `stealth-factory/gh-manager-cli`.
+That repository must hold one of those secrets for a bot with Contents write
+on `stealth-factory/apt-repo`. Its first publication can be that dispatch from
+a tag carrying the Debian assets, or a manual `publish.yml` run with package
+`gh-manager-cli`.
+
 Required reviewers may mean each release or scheduled metadata refresh needs approval. The
 owner decides whether to approve each run or authorize unattended publication;
 changing that protection is another access decision. There is no enable-variable
@@ -67,8 +76,8 @@ so a new dispatch does not overtake the versions being replayed.
 
 ## Publication contract
 
-Opscope's `apt-repository` job depends on successful release asset publication
-and uses the same `secrets.GH_TOKEN || secrets.RELEASE_TOKEN` pattern as Homebrew.
+Opscope's and gh-manager-cli's apt dispatch jobs depend on successful release
+asset publication and use `secrets.GH_TOKEN || secrets.RELEASE_TOKEN`.
 Read-only inspection verified an existing `GH_TOKEN` secret name; secret values
 were neither read nor changed. The owner reports its bot already has access to
 both repositories. Its actual dispatch capability will be exercised only in an
@@ -103,7 +112,13 @@ The payload must match its own embedded binary manifest
 release without changing this repository. Binaries may only live in the private
 directory, must be root-owned executables with plain names, and every release
 must ship the `required_binaries` from `packages.json`.
-The signed snapshot is tested in clean Ubuntu 22.04 and Debian 12 containers,
+A package without `private_directory` must contain exactly one executable at
+`usr/bin/<package>` and documentation only under `usr/share/doc/<package>`.
+It must not declare `required_binaries`. Maintainer scripts and any other path
+are still refused.
+The signed snapshot is tested in clean Ubuntu 22.04 and Debian 12 containers
+for every package present in the pool (a pool package without lifecycle
+coverage fails the run),
 including rejection of tampered signed metadata. If multiple versions exist,
 APT installs the previous version and upgrades to the latest. The first release
 can prove clean install only; upgrade evidence needs a second release.

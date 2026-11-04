@@ -69,6 +69,33 @@ class RepositoryTests(unittest.TestCase):
     def hash(self, file):
         Path(str(file) + '.sha256').write_text(f'{r.checksum(file)}  {file.name}\n')
 
+    def single(self, release, extra=None, launcher=True, mode=0o755):
+        # One /usr/bin executable plus documentation. No private directory
+        # and no binary manifest.
+        tree = self.root / ('single-' + release)
+        (tree / 'DEBIAN').mkdir(parents=True)
+        (tree / 'DEBIAN/control').write_text(
+            f'Package: gh-manager-cli\nVersion: {release}\nArchitecture: amd64\n'
+            'Maintainer: Test <test@example.invalid>\n'
+            'Depends: libc6 (>= 2.35), libgcc-s1\nDescription: Test fixture\n')
+        (tree / 'usr/bin').mkdir(parents=True)
+        if launcher:
+            file = tree / 'usr/bin/gh-manager-cli'
+            file.write_text('#!/bin/sh\necho fixture\n')
+            file.chmod(mode)
+        docs = tree / 'usr/share/doc/gh-manager-cli'
+        docs.mkdir(parents=True)
+        for name in ['README.md', 'CHANGELOG.md', 'copyright']:
+            (docs / name).write_text('fixture\n')
+        if extra:
+            file = tree / extra
+            file.parent.mkdir(parents=True, exist_ok=True)
+            file.write_text('unexpected')
+        file = self.incoming / f'gh-manager-cli_{release}_amd64.deb'
+        subprocess.run(['dpkg-deb', '--root-owner-group', '--build', str(tree), str(file)], check=True, stdout=subprocess.DEVNULL)
+        self.hash(file)
+        return file
+
     def test_registry_requires_the_launcher_binary(self):
         self.assertEqual(r.registry()['opscope']['required_binaries'], ['opscope'])
 
@@ -304,6 +331,69 @@ esac
         self.assertLessEqual(remaining.total_seconds(), 90 * 86400)
         self.assertIn(r.checksum(binary / 'Packages'), release)
         self.assertFalse((self.site / 'dists/stable/InRelease').exists())
+
+
+    @unittest.skipUnless(shutil.which('dpkg-deb'), 'Linux dpkg required')
+    def test_single_binary_packages_cannot_declare_a_binary_inventory(self):
+        self.single('0.1.0')
+        config = dict(r.registry()['gh-manager-cli'], required_binaries=['gh-manager-cli'])
+        file = self.incoming / 'gh-manager-cli_0.1.0_amd64.deb'
+        with self.assertRaisesRegex(ValueError, 'required binary list'):
+            r.inspect(file, 'gh-manager-cli', '0.1.0', config)
+
+    def test_fetch_uses_each_packages_own_source_and_asset_names(self):
+        filename = 'gh-manager-cli_1.53.4_amd64.deb'
+        release = {'draft': False, 'prerelease': False, 'tag_name': 'v1.53.4',
+                   'assets': [{'name': filename}, {'name': filename + '.sha256'},
+                              {'name': 'gh-manager-cli-linux-x64'}]}
+        api, downloads = [], []
+        def run(*args):
+            api.append(args)
+            return 'c' * 40 if '/commits/' in args[2] else json.dumps(release)
+        with patch.object(r, 'run', side_effect=run), \
+                patch.object(r.subprocess, 'check_call', side_effect=downloads.append), \
+                patch.object(r, 'import_package') as importer:
+            r.fetch_release(self.site, self.incoming, 'gh-manager-cli', 'v1.53.4', 'c' * 40)
+        self.assertEqual([a[2] for a in api], [
+            'repos/stealth-factory/gh-manager-cli/releases/tags/v1.53.4',
+            'repos/stealth-factory/gh-manager-cli/commits/v1.53.4'])
+        command = downloads[0]
+        self.assertEqual(command[command.index('--repo') + 1], 'stealth-factory/gh-manager-cli')
+        self.assertEqual([command[i + 1] for i, part in enumerate(command) if part == '--pattern'],
+                         [filename, filename + '.sha256'])
+        self.assertEqual(importer.call_args.args[2:], ('gh-manager-cli', '1.53.4'))
+
+    @unittest.skipUnless(shutil.which('dpkg-deb'), 'Linux dpkg required')
+    def test_single_binary_package_layout(self):
+        self.single('1.53.4')
+        self.assertTrue(r.import_package(self.site, self.incoming, 'gh-manager-cli', '1.53.4'))
+        for release, kwargs, error in [
+                ('1.53.5', {'extra': 'usr/libexec/gh-manager-cli/helper'}, 'data member'),
+                ('1.53.6', {'extra': 'usr/bin/link'}, 'data member'),
+                ('1.53.7', {'extra': 'etc/gh-manager-cli.toml'}, 'data member'),
+                ('1.53.8', {'launcher': False}, 'usr/bin/gh-manager-cli'),
+                ('1.53.9', {'mode': 0o644}, 'Non-executable')]:
+            with self.subTest(release=release):
+                self.single(release, **kwargs)
+                with self.assertRaisesRegex(ValueError, error):
+                    r.import_package(self.site, self.incoming, 'gh-manager-cli', release)
+        self.package('1.2.3')
+        self.assertTrue(r.import_package(self.site, self.incoming, 'opscope', '1.2.3'))
+        self.assertEqual(r.inventory(self.site), {'gh-manager-cli': ['1.53.4'], 'opscope': ['1.2.3']})
+        self.single('1.53.3')
+        with self.assertRaisesRegex(ValueError, 'downgrade'):
+            r.import_package(self.site, self.incoming, 'gh-manager-cli', '1.53.3')
+
+    @unittest.skipUnless(shutil.which('apt-ftparchive'), 'Linux apt-utils required')
+    def test_indexes_list_every_package(self):
+        self.package('1.2.3')
+        r.import_package(self.site, self.incoming, 'opscope', '1.2.3')
+        self.single('1.53.4')
+        r.import_package(self.site, self.incoming, 'gh-manager-cli', '1.53.4')
+        r.indexes(self.site)
+        content = (self.site / 'dists/stable/main/binary-amd64/Packages').read_text()
+        self.assertIn('Filename: pool/main/opscope/opscope_1.2.3_amd64.deb', content)
+        self.assertIn('Filename: pool/main/gh-manager-cli/gh-manager-cli_1.53.4_amd64.deb', content)
 
 
 if __name__ == '__main__':
