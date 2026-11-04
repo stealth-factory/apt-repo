@@ -46,7 +46,7 @@ Trusting the key authorizes its
 holder to supply packages installed as root. HTTPS protects key transport;
 checking the announced fingerprint establishes which key you intended to trust.
 
-Upgrade with `sudo apt update && sudo apt upgrade`. All seventeen Opscope
+Upgrade with `sudo apt update && sudo apt upgrade`. All Opscope
 binaries live together in `/usr/libexec/opscope`; only an exec wrapper named
 `opscope` is installed in `/usr/bin`. Coreutils' `link` stays untouched.
 User settings in `~/.config/opscope` are not owned or removed by the package.

@@ -67,9 +67,9 @@ def inspect(file, name, release, config):
             if not member.isfile() or member_name not in ('control', 'md5sums'):
                 raise ValueError(f'Unexpected control member: {member.name}')
     data = subprocess.check_output(['dpkg-deb', '--fsys-tarfile', str(file)])
-    expected = sorted(config['binaries'])
-    if not expected or len(set(expected)) != len(expected):
-        raise ValueError('Invalid approved binary inventory')
+    required = config['required_binaries']
+    if not required or len(set(required)) != len(required):
+        raise ValueError('Invalid required binary list')
     actual = []
     manifest = None
     with tarfile.open(fileobj=io.BytesIO(data)) as archive:
@@ -97,8 +97,15 @@ def inspect(file, name, release, config):
                 if manifest is not None:
                     raise ValueError('Duplicate binary manifest')
                 manifest = archive.extractfile(member).read().decode().splitlines()
-    if sorted(actual) != expected or manifest != expected:
-        raise ValueError('Package binaries and manifest must match approved binary inventory')
+    # Widgets come and go between releases, so the package's own manifest is
+    # the inventory. It must list exactly the shipped binaries, in order, with
+    # plain names, and include the binaries every release must provide.
+    if manifest is None or manifest != sorted(set(manifest)) or manifest != sorted(actual):
+        raise ValueError('Package binaries must match its binary manifest')
+    if any(not re.fullmatch(r'[a-z0-9][a-z0-9-]*', binary) for binary in manifest):
+        raise ValueError('Invalid binary name in manifest')
+    if not set(required) <= set(manifest):
+        raise ValueError('Package is missing a required binary')
 
 
 def inventory(site):
