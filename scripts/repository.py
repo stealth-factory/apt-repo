@@ -69,12 +69,15 @@ def inspect(file, name, release, config):
     data = subprocess.check_output(['dpkg-deb', '--fsys-tarfile', str(file)])
     # A private directory holds a multi-binary package (opscope). Its own
     # manifest is the inventory, so widgets can change between releases, and
-    # required_binaries must still ship. Without one, the package is a single
-    # executable at /usr/bin/<name> and must not declare an inventory.
+    # required_binaries must still ship. Without one the package is a single
+    # executable at /usr/bin/<name>. Documentation under /usr/share/doc/<name>
+    # must not be executable, and the package must not declare an inventory.
     private = config.get('private_directory')
     if private is None:
         if 'binaries' in config:
             raise ValueError('Invalid approved binary inventory')
+        if 'required_binaries' in config:
+            raise ValueError('Invalid required binary list')
     else:
         required = config['required_binaries']
         if not required or len(set(required)) != len(required):
@@ -82,7 +85,6 @@ def inspect(file, name, release, config):
     actual = []
     manifest = None
     launcher = False
-    roots = [root for root in (private, f'usr/share/doc/{name}') if root]
     with tarfile.open(fileobj=io.BytesIO(data)) as archive:
         for member in archive:
             if member.uid != 0 or member.gid != 0 or member.mode & 0o7022:
@@ -92,16 +94,14 @@ def inspect(file, name, release, config):
             member_name = member.name.removeprefix('./').rstrip('/')
             if member_name.startswith('/') or '..' in member_name.split('/'):
                 raise ValueError('Unsafe package path')
-            in_private = private is not None and member_name.startswith(private + '/')
+            roots = ([private] if private is not None else []) + [f'usr/share/doc/{name}']
             allowed = member_name == f'usr/bin/{name}' or any(
                 member_name.startswith(root + '/') for root in roots)
             directory = member.isdir() and (member_name in ('', '.', 'usr', 'usr/bin', 'usr/libexec', 'usr/share', 'usr/share/doc') or
                                            any(member_name == root or member_name.startswith(root + '/') for root in roots))
             if not directory and not (member.isfile() and allowed):
                 raise ValueError(f'Unexpected data member: {member.name}')
-            if (private is None and member.isfile() and member.mode & 0o111
-                    and member_name.startswith(f'usr/share/doc/{name}/')):
-                raise ValueError(f'Executable documentation file: {member.name}')
+            in_private = private is not None and member_name.startswith(private + '/')
             if member.isfile() and (member_name == f'usr/bin/{name}' or in_private):
                 if member.mode & 0o555 != 0o555:
                     raise ValueError(f'Non-executable package binary: {member.name}')
@@ -109,6 +109,9 @@ def inspect(file, name, release, config):
                     actual.append(member_name.removeprefix(private + '/'))
                 else:
                     launcher = True
+            if private is None and member.isfile() and member_name.startswith(f'usr/share/doc/{name}/'):
+                if member.mode & 0o111:
+                    raise ValueError(f'Executable documentation file: {member.name}')
             if private is not None and member.isfile() and member_name == f'usr/share/doc/{name}/binaries':
                 if manifest is not None:
                     raise ValueError('Duplicate binary manifest')
@@ -116,16 +119,16 @@ def inspect(file, name, release, config):
     if private is None:
         if not launcher:
             raise ValueError(f'Package must contain executable usr/bin/{name}')
-    else:
-        # Widgets come and go between releases, so the package's own manifest is
-        # the inventory. It must list exactly the shipped binaries, in order, with
-        # plain names, and include the binaries every release must provide.
-        if manifest is None or manifest != sorted(set(manifest)) or manifest != sorted(actual):
-            raise ValueError('Package binaries must match its binary manifest')
-        if any(not re.fullmatch(r'[a-z0-9][a-z0-9-]*', binary) for binary in manifest):
-            raise ValueError('Invalid binary name in manifest')
-        if not set(required) <= set(manifest):
-            raise ValueError('Package is missing a required binary')
+        return
+    # Widgets come and go between releases, so the package's own manifest is
+    # the inventory. It must list exactly the shipped binaries, in order, with
+    # plain names, and include the binaries every release must provide.
+    if manifest is None or manifest != sorted(set(manifest)) or manifest != sorted(actual):
+        raise ValueError('Package binaries must match its binary manifest')
+    if any(not re.fullmatch(r'[a-z0-9][a-z0-9-]*', binary) for binary in manifest):
+        raise ValueError('Invalid binary name in manifest')
+    if not set(required) <= set(manifest):
+        raise ValueError('Package is missing a required binary')
 
 
 def inventory(site):

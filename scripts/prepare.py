@@ -11,10 +11,10 @@ def request(event_name, event):
     if event_name == 'schedule':
         return None  # Refresh existing metadata only; never discover releases.
     if event_name == 'repository_dispatch':
-        # Each package owns exactly one dispatch type; the type alone selects
-        # the package, and the payload must then name that package's source.
+        # The dispatch type selects the package. The payload must then name
+        # that package's own source repository.
         names = [name for name, config in registry().items()
-                 if config['dispatch'] == event.get('action')]
+                 if config.get('dispatch') == event.get('action')]
         if len(names) != 1:
             raise ValueError('Unexpected dispatch type')
         payload = event.get('client_payload', {})
