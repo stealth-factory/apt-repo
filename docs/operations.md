@@ -108,11 +108,16 @@ All retained packages are revalidated before indexing. Neither packages nor
 by-hash indexes are deleted automatically. Packages and metadata are signed in
 a temporary GnuPG home outside `site`, then the exported public key verifies
 both signatures. No private keyring enters `apt-state` or Pages artifacts.
-The payload and its embedded inventory must match the repository-owned approved
-binary list; an artifact cannot define its own expected coverage.
-The signed snapshot is tested in clean Ubuntu 22.04 and Debian 12 containers
-for every package present in the pool (a pool package without lifecycle
-coverage fails the run),
+A package with a private directory must match its own embedded binary manifest
+(`usr/share/doc/<package>/binaries`), so widgets can be added or removed in any
+release without changing this repository. Those binaries may only live in the
+private directory, must be root-owned executables with plain names, and every
+release must ship the `required_binaries` from `packages.json`. A package
+without a private directory ships exactly one executable at `/usr/bin/<package>`
+and non-executable files under `/usr/share/doc/<package>`; it must not declare
+a binary inventory. The signed snapshot is tested in clean Ubuntu 22.04 and
+Debian 12 containers for every package present in the pool (a pool package
+without lifecycle coverage fails the run),
 including rejection of tampered signed metadata. If multiple versions exist,
 APT installs the previous version and upgrades to the latest. The first release
 can prove clean install only; upgrade evidence needs a second release.

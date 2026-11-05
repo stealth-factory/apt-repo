@@ -67,15 +67,18 @@ def inspect(file, name, release, config):
             if not member.isfile() or member_name not in ('control', 'md5sums'):
                 raise ValueError(f'Unexpected control member: {member.name}')
     data = subprocess.check_output(['dpkg-deb', '--fsys-tarfile', str(file)])
-    # A private directory holds a reviewed multi-binary inventory (opscope).
-    # Without one the package is a single executable at /usr/bin/<name>.
+    # A private directory holds a multi-binary package (opscope). Its own
+    # manifest is the inventory, so widgets can change between releases, and
+    # required_binaries must still ship. Without one, the package is a single
+    # executable at /usr/bin/<name> and must not declare an inventory.
     private = config.get('private_directory')
-    expected = sorted(config.get('binaries', []))
     if private is None:
         if 'binaries' in config:
             raise ValueError('Invalid approved binary inventory')
-    elif not expected or len(set(expected)) != len(expected):
-        raise ValueError('Invalid approved binary inventory')
+    else:
+        required = config['required_binaries']
+        if not required or len(set(required)) != len(required):
+            raise ValueError('Invalid required binary list')
     actual = []
     manifest = None
     launcher = False
@@ -96,6 +99,9 @@ def inspect(file, name, release, config):
                                            any(member_name == root or member_name.startswith(root + '/') for root in roots))
             if not directory and not (member.isfile() and allowed):
                 raise ValueError(f'Unexpected data member: {member.name}')
+            if (private is None and member.isfile() and member.mode & 0o111
+                    and member_name.startswith(f'usr/share/doc/{name}/')):
+                raise ValueError(f'Executable documentation file: {member.name}')
             if member.isfile() and (member_name == f'usr/bin/{name}' or in_private):
                 if member.mode & 0o555 != 0o555:
                     raise ValueError(f'Non-executable package binary: {member.name}')
@@ -110,8 +116,16 @@ def inspect(file, name, release, config):
     if private is None:
         if not launcher:
             raise ValueError(f'Package must contain executable usr/bin/{name}')
-    elif sorted(actual) != expected or manifest != expected:
-        raise ValueError('Package binaries and manifest must match approved binary inventory')
+    else:
+        # Widgets come and go between releases, so the package's own manifest is
+        # the inventory. It must list exactly the shipped binaries, in order, with
+        # plain names, and include the binaries every release must provide.
+        if manifest is None or manifest != sorted(set(manifest)) or manifest != sorted(actual):
+            raise ValueError('Package binaries must match its binary manifest')
+        if any(not re.fullmatch(r'[a-z0-9][a-z0-9-]*', binary) for binary in manifest):
+            raise ValueError('Invalid binary name in manifest')
+        if not set(required) <= set(manifest):
+            raise ValueError('Package is missing a required binary')
 
 
 def inventory(site):

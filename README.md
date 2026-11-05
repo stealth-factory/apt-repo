@@ -51,7 +51,7 @@ Trusting the key authorizes its
 holder to supply packages installed as root. HTTPS protects key transport;
 checking the announced fingerprint establishes which key you intended to trust.
 
-Upgrade with `sudo apt update && sudo apt upgrade`. All seventeen Opscope
+Upgrade with `sudo apt update && sudo apt upgrade`. All Opscope
 binaries live together in `/usr/libexec/opscope`; only an exec wrapper named
 `opscope` is installed in `/usr/bin`. Coreutils' `link` stays untouched.
 User settings in `~/.config/opscope` are not owned or removed by the package.
@@ -98,9 +98,10 @@ credential or expanded account permission is configured by this implementation.
 application is a reviewed change to this allowlist (including its dispatch
 type), the `publish.yml` dispatch types and manual package choices, dependency
 policy, package layout checks, and lifecycle tests. A package with a
-`private_directory` ships a reviewed binary inventory there (Opscope); one
-without ships exactly one executable at `/usr/bin/<package>` plus its
-`/usr/share/doc/<package>` files (gh-pr-manager). Unrelated organization content is never
+`private_directory` ships the binaries named in its own manifest and must
+include `required_binaries` from `packages.json` (Opscope). A package without
+one ships exactly one executable at `/usr/bin/<package>` and non-executable
+files under `/usr/share/doc/<package>` (gh-pr-manager). Unrelated organization content is never
 copied or published.
 
 Packages and old by-hash indexes are retained on `apt-state`. Package bytes
