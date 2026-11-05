@@ -69,7 +69,7 @@ class RepositoryTests(unittest.TestCase):
     def hash(self, file):
         Path(str(file) + '.sha256').write_text(f'{r.checksum(file)}  {file.name}\n')
 
-    def single(self, release, extra=None, launcher=True, mode=0o755):
+    def single(self, release, extra=None, launcher=True, mode=0o755, extra_mode=None):
         # One /usr/bin executable plus documentation. No private directory
         # and no binary manifest.
         tree = self.root / ('single-' + release)
@@ -91,6 +91,8 @@ class RepositoryTests(unittest.TestCase):
             file = tree / extra
             file.parent.mkdir(parents=True, exist_ok=True)
             file.write_text('unexpected')
+            if extra_mode is not None:
+                file.chmod(extra_mode)
         file = self.incoming / f'gh-manager-cli_{release}_amd64.deb'
         subprocess.run(['dpkg-deb', '--root-owner-group', '--build', str(tree), str(file)], check=True, stdout=subprocess.DEVNULL)
         self.hash(file)
@@ -372,7 +374,8 @@ esac
                 ('1.53.6', {'extra': 'usr/bin/link'}, 'data member'),
                 ('1.53.7', {'extra': 'etc/gh-manager-cli.toml'}, 'data member'),
                 ('1.53.8', {'launcher': False}, 'usr/bin/gh-manager-cli'),
-                ('1.53.9', {'mode': 0o644}, 'Non-executable')]:
+                ('1.53.9', {'mode': 0o644}, 'Non-executable'),
+                ('1.53.10', {'extra': 'usr/share/doc/gh-manager-cli/helper', 'extra_mode': 0o755}, 'Executable documentation')]:
             with self.subTest(release=release):
                 self.single(release, **kwargs)
                 with self.assertRaisesRegex(ValueError, error):

@@ -69,11 +69,11 @@ def inspect(file, name, release, config):
     data = subprocess.check_output(['dpkg-deb', '--fsys-tarfile', str(file)])
     # A private directory holds a reviewed multi-binary inventory (opscope).
     # Without one the package is a single executable at /usr/bin/<name>.
+    # Files under /usr/share/doc/<name> are documentation and must not be executable.
     private = config.get('private_directory')
     if private is None:
         if 'required_binaries' in config or 'binaries' in config:
             raise ValueError('Invalid required binary list')
-        required = []
     else:
         required = config['required_binaries']
         if not required or len(set(required)) != len(required):
@@ -105,6 +105,9 @@ def inspect(file, name, release, config):
                     actual.append(member_name.removeprefix(private + '/'))
                 else:
                     launcher = True
+            if private is None and member.isfile() and member_name.startswith(f'usr/share/doc/{name}/'):
+                if member.mode & 0o111:
+                    raise ValueError(f'Executable documentation file: {member.name}')
             if private is not None and member.isfile() and member_name == f'usr/share/doc/{name}/binaries':
                 if manifest is not None:
                     raise ValueError('Duplicate binary manifest')
