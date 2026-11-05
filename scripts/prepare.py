@@ -11,12 +11,16 @@ def request(event_name, event):
     if event_name == 'schedule':
         return None  # Refresh existing metadata only; never discover releases.
     if event_name == 'repository_dispatch':
-        if event.get('action') != 'opscope-release':
+        # The dispatch type selects the package. The payload must then name
+        # that package's own source repository.
+        names = [name for name, config in registry().items()
+                 if config.get('dispatch') == event.get('action')]
+        if len(names) != 1:
             raise ValueError('Unexpected dispatch type')
         payload = event.get('client_payload', {})
         if set(payload) != {'repository', 'tag', 'commit'}:
             raise ValueError('Expected exact repository/tag/commit dispatch fields')
-        name = 'opscope'
+        name = names[0]
         if payload['repository'] != registry()[name]['repository']:
             raise ValueError('Unexpected release source')
         tag, commit = payload['tag'], payload['commit']

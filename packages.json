@@ -1,11 +1,18 @@
 {
   "opscope": {
     "repository": "stealth-factory/opscope",
+    "dispatch": "opscope-release",
     "architecture": "amd64",
     "depends": "libc6 (>= 2.35), libgcc-s1",
     "private_directory": "usr/libexec/opscope",
     "required_binaries": [
       "opscope"
     ]
+  },
+  "gh-manager-cli": {
+    "repository": "stealth-factory/gh-manager-cli",
+    "dispatch": "gh-manager-cli-release",
+    "architecture": "amd64",
+    "depends": "libc6 (>= 2.35), libgcc-s1"
   }
 }
