@@ -1,8 +1,9 @@
 # Stealth Factory APT repository
 
 Shared tooling for signed Debian packages for
-[Opscope](https://github.com/stealth-factory/opscope) and
-[gh-manager-cli](https://github.com/stealth-factory/gh-manager-cli). This is our
+[Opscope](https://github.com/stealth-factory/opscope),
+[gh-manager-cli](https://github.com/stealth-factory/gh-manager-cli), and
+[gh-pr-manager](https://github.com/stealth-factory/gh-pr-manager). This is our
 own package repository; it is not inclusion in Debian or Ubuntu's official
 archives.
 
@@ -14,7 +15,7 @@ are stored in this tree.
 
 ## Install after activation
 
-Both packages support **Linux amd64 with glibc 2.35 or newer**. The lifecycle
+These packages support **Linux amd64 with glibc 2.35 or newer**. The lifecycle
 checks target Ubuntu 22.04 and Debian 12. There is no Linux arm64 package.
 Node and Rust are not required; npm/npx remains each application's default
 install route.
@@ -39,9 +40,11 @@ printf '%s\n' 'deb [arch=amd64 signed-by=/etc/apt/keyrings/stealth-factory.asc] 
   | sudo tee /etc/apt/sources.list.d/stealth-factory.list
 sudo apt update
 sudo apt install opscope          # and/or
-sudo apt install gh-manager-cli
+sudo apt install gh-manager-cli   # and/or
+sudo apt install gh-pr-manager
 opscope clocks
 gh-manager-cli --version
+gh-pr-manager --version
 ```
 
 `Signed-By` scopes this key to this source. Do not use `apt-key`,
@@ -60,8 +63,15 @@ gh-manager-cli is a single binary installed as `/usr/bin/gh-manager-cli`, with
 its readme, changelog, and licence in `/usr/share/doc/gh-manager-cli`. Settings
 in `~/.config/gh-manager-cli` are not owned or removed by the package.
 
-Remove a package with `sudo apt remove opscope` or
-`sudo apt remove gh-manager-cli`. To stop using this source:
+gh-pr-manager is a single binary installed as `/usr/bin/gh-pr-manager`, with
+its README, changelog and licence in `/usr/share/doc/gh-pr-manager`. It reads
+`GH_TOKEN`/`GITHUB_TOKEN` or the GitHub CLI's login at run time; `gh` is not a
+package dependency. Its
+settings in `~/.config/gh-pr-manager` are not owned or removed by the package.
+
+Remove a package with `sudo apt remove opscope`,
+`sudo apt remove gh-manager-cli`, or
+`sudo apt remove gh-pr-manager`. To stop using this source:
 
 ```sh
 sudo rm /etc/apt/sources.list.d/stealth-factory.list
@@ -77,8 +87,9 @@ from this shared repository. Package removal does not remove personal settings.
 Each application's successful tagged release job sends a `repository_dispatch`
 to this repository using its existing bot token (`GH_TOKEN`, falling
 back to `RELEASE_TOKEN`). Each package has its own event type, listed as
-`dispatch` in `packages.json`: `opscope-release` from `stealth-factory/opscope`
-and `gh-manager-cli-release` from `stealth-factory/gh-manager-cli`. A type is
+`dispatch` in `packages.json`: `opscope-release` from `stealth-factory/opscope`,
+`gh-manager-cli-release` from `stealth-factory/gh-manager-cli`, and
+`gh-pr-manager-release` from `stealth-factory/gh-pr-manager`. A type is
 accepted only with its own package's source repository. The event carries only the allowlisted source, exact
 stable tag, and release commit. No secret is transmitted. The importer resolves
 that tag, verifies its commit and public release, and downloads only that
@@ -96,9 +107,10 @@ credential or expanded account permission is configured by this implementation.
 application is a reviewed change to this allowlist (including its dispatch
 type), the `publish.yml` dispatch types and manual package choices, dependency
 policy, package layout checks, and lifecycle tests. A package with a
-`private_directory` ships a reviewed binary inventory there (Opscope). One
-without ships exactly one executable at `/usr/bin/<package>` plus its
-`/usr/share/doc/<package>` files (gh-manager-cli). Unrelated organization content is never
+`private_directory` ships the binaries named in its own manifest and must
+include `required_binaries` from `packages.json` (Opscope). A package without
+one ships exactly one executable at `/usr/bin/<package>` and non-executable
+files under `/usr/share/doc/<package>` (gh-manager-cli and gh-pr-manager). Unrelated organization content is never
 copied or published.
 
 Packages and old by-hash indexes are retained on `apt-state`. Package bytes

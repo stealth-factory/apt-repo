@@ -28,11 +28,19 @@ class PrepareTests(unittest.TestCase):
         with self.assertRaises(ValueError): prepare.request('repository_dispatch', event)
 
     def test_each_dispatch_type_selects_only_its_own_package_source(self):
+        event = {'action': 'gh-pr-manager-release', 'client_payload': {
+            'repository': 'stealth-factory/gh-pr-manager', 'tag': 'v0.1.0', 'commit': 'b' * 40}}
+        self.assertEqual(prepare.request('repository_dispatch', event), ('gh-pr-manager', 'v0.1.0', 'b' * 40))
         event = {'action': 'gh-manager-cli-release', 'client_payload': {
             'repository': 'stealth-factory/gh-manager-cli', 'tag': 'v1.2.3', 'commit': 'b' * 40}}
         self.assertEqual(prepare.request('repository_dispatch', event), ('gh-manager-cli', 'v1.2.3', 'b' * 40))
-        for action, repository in [('gh-manager-cli-release', 'stealth-factory/opscope'),
-                                   ('opscope-release', 'stealth-factory/gh-manager-cli')]:
+        # A valid source under another package's dispatch type is refused.
+        for action, repository in [('gh-pr-manager-release', 'stealth-factory/opscope'),
+                                   ('opscope-release', 'stealth-factory/gh-pr-manager'),
+                                   ('gh-manager-cli-release', 'stealth-factory/opscope'),
+                                   ('opscope-release', 'stealth-factory/gh-manager-cli'),
+                                   ('gh-pr-manager-release', 'stealth-factory/gh-manager-cli'),
+                                   ('gh-manager-cli-release', 'stealth-factory/gh-pr-manager')]:
             event = self.event()
             event['action'] = action
             event['client_payload']['repository'] = repository
@@ -44,6 +52,7 @@ class PrepareTests(unittest.TestCase):
         self.assertEqual(len(types), len(set(types)))
         self.assertEqual(prepare.registry()['opscope']['dispatch'], 'opscope-release')
         self.assertEqual(prepare.registry()['gh-manager-cli']['dispatch'], 'gh-manager-cli-release')
+        self.assertEqual(prepare.registry()['gh-pr-manager']['dispatch'], 'gh-pr-manager-release')
 
     def test_schedule_refreshes_only_existing_metadata(self):
         with tempfile.TemporaryDirectory() as root, patch.object(prepare, 'fetch_release') as fetch, patch.object(prepare, 'indexes') as indexes:
@@ -55,7 +64,7 @@ class PrepareTests(unittest.TestCase):
         workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/publish.yml').read_text()
         self.assertEqual(workflow.count('cron:'), 1)
         self.assertIn("cron: '30 11 1 * *'", workflow)
-        self.assertIn('    types: [opscope-release, gh-manager-cli-release]\n', workflow)
+        self.assertIn('    types: [opscope-release, gh-manager-cli-release, gh-pr-manager-release]\n', workflow)
 
     def test_workflow_triggers_cover_exactly_the_registry(self):
         workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/publish.yml').read_text()
@@ -69,6 +78,7 @@ class PrepareTests(unittest.TestCase):
     def test_manual_recovery_requires_exact_package_and_tag(self):
         self.assertEqual(prepare.request('workflow_dispatch', {'inputs': {'package': 'opscope', 'tag': 'v1.2.3'}}), ('opscope', 'v1.2.3', None))
         self.assertEqual(prepare.request('workflow_dispatch', {'inputs': {'package': 'gh-manager-cli', 'tag': 'v1.53.4'}}), ('gh-manager-cli', 'v1.53.4', None))
+        self.assertEqual(prepare.request('workflow_dispatch', {'inputs': {'package': 'gh-pr-manager', 'tag': 'v0.1.0'}}), ('gh-pr-manager', 'v0.1.0', None))
         for inputs in [{}, {'package': 'other', 'tag': 'v1.2.3'}, {'package': 'opscope', 'tag': 'latest'}]:
             with self.assertRaises(ValueError): prepare.request('workflow_dispatch', {'inputs': inputs})
         with self.assertRaises(ValueError): prepare.request('pull_request', {})

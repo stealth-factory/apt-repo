@@ -67,12 +67,16 @@ def inspect(file, name, release, config):
             if not member.isfile() or member_name not in ('control', 'md5sums'):
                 raise ValueError(f'Unexpected control member: {member.name}')
     data = subprocess.check_output(['dpkg-deb', '--fsys-tarfile', str(file)])
-    # A private directory holds a reviewed multi-binary inventory (opscope).
-    # Without one the package is a single executable at /usr/bin/<name>.
-    # Files under /usr/share/doc/<name> are documentation and must not be executable.
+    # A private directory holds a multi-binary package (opscope). Its own
+    # manifest is the inventory, so widgets can change between releases, and
+    # required_binaries must still ship. Without one the package is a single
+    # executable at /usr/bin/<name>. Documentation under /usr/share/doc/<name>
+    # must not be executable, and the package must not declare an inventory.
     private = config.get('private_directory')
     if private is None:
-        if 'required_binaries' in config or 'binaries' in config:
+        if 'binaries' in config:
+            raise ValueError('Invalid approved binary inventory')
+        if 'required_binaries' in config:
             raise ValueError('Invalid required binary list')
     else:
         required = config['required_binaries']

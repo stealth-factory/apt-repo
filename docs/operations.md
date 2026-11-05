@@ -50,6 +50,15 @@ on `stealth-factory/apt-repo`. Its first publication can be that dispatch from
 a tag carrying the Debian assets, or a manual `publish.yml` run with package
 `gh-manager-cli`.
 
+gh-pr-manager reuses the same signing key, `apt-publishing` environment,
+Pages site and `apt-state` history; it needs no new secret or variable here.
+Its release workflow (`apt-repository` job, `debian/notify-apt.js`) sends
+`gh-pr-manager-release` with `secrets.GH_TOKEN || secrets.RELEASE_TOKEN` from
+`stealth-factory/gh-pr-manager`, so that repository must hold one of those
+secrets for a bot with Contents write on `stealth-factory/apt-repo`. Its first
+publication can be either that dispatch from a new tag carrying the Debian
+assets or a manual `publish.yml` run with package `gh-pr-manager`.
+
 Required reviewers may mean each release or scheduled metadata refresh needs approval. The
 owner decides whether to approve each run or authorize unattended publication;
 changing that protection is another access decision. There is no enable-variable
@@ -76,11 +85,12 @@ so a new dispatch does not overtake the versions being replayed.
 
 ## Publication contract
 
-Opscope's and gh-manager-cli's apt dispatch jobs depend on successful release
-asset publication and use `secrets.GH_TOKEN || secrets.RELEASE_TOKEN`.
+Opscope, gh-manager-cli, and gh-pr-manager depend on successful release
+asset publication and use `secrets.GH_TOKEN || secrets.RELEASE_TOKEN`, the
+same pattern as Homebrew.
 Read-only inspection verified an existing `GH_TOKEN` secret name; secret values
 were neither read nor changed. The owner reports its bot already has access to
-both repositories. Its actual dispatch capability will be exercised only in an
+the registered repositories. Its actual dispatch capability will be exercised only in an
 approved release run; this task does not retrieve the secret or send a live event.
 
 The [repository_dispatch endpoint](https://docs.github.com/en/rest/repos/repos#create-a-repository-dispatch-event)
@@ -107,15 +117,15 @@ All retained packages are revalidated before indexing. Neither packages nor
 by-hash indexes are deleted automatically. Packages and metadata are signed in
 a temporary GnuPG home outside `site`, then the exported public key verifies
 both signatures. No private keyring enters `apt-state` or Pages artifacts.
-The payload must match its own embedded binary manifest
+A package with a private directory must match its own embedded binary manifest
 (`usr/share/doc/<package>/binaries`), so widgets can be added or removed in any
-release without changing this repository. Binaries may only live in the private
-directory, must be root-owned executables with plain names, and every release
-must ship the `required_binaries` from `packages.json`.
+release without changing this repository. Those binaries may only live in the
+private directory, must be root-owned executables with plain names, and every
+release must ship the `required_binaries` from `packages.json`.
 A package without `private_directory` must contain exactly one executable at
-`usr/bin/<package>` and documentation only under `usr/share/doc/<package>`.
-It must not declare `required_binaries`. Maintainer scripts and any other path
-are still refused.
+`usr/bin/<package>` and non-executable documentation only under
+`usr/share/doc/<package>`. It must not declare `required_binaries` or a binary
+inventory. Maintainer scripts and any other path are still refused.
 The signed snapshot is tested in clean Ubuntu 22.04 and Debian 12 containers
 for every package present in the pool (a pool package without lifecycle
 coverage fails the run),

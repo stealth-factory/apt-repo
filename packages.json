@@ -14,5 +14,11 @@
     "dispatch": "gh-manager-cli-release",
     "architecture": "amd64",
     "depends": "libc6 (>= 2.35), libgcc-s1"
+  },
+  "gh-pr-manager": {
+    "repository": "stealth-factory/gh-pr-manager",
+    "dispatch": "gh-pr-manager-release",
+    "architecture": "amd64",
+    "depends": "libc6 (>= 2.35), libgcc-s1"
   }
 }
