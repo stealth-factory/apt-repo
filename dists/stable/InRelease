@@ -1,41 +1,41 @@
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA256
 
-Valid-Until: Thu, 04 Feb 2027 12:22:17 GMT
+Valid-Until: Thu, 04 Feb 2027 16:43:21 GMT
 Acquire-By-Hash: yes
 Architectures: amd64
 Codename: stable
 Components: main
-Date: Fri, 06 Nov 2026 12:22:17 +0000
+Date: Fri, 06 Nov 2026 16:43:21 +0000
 Description: Stealth Factory application packages
 Label: Stealth Factory
 Origin: Stealth Factory
 Suite: stable
 MD5Sum:
- b35c5ba2cf89c4da6e14f6d4cd9e49e8            10802 main/binary-amd64/Packages
- 1829ef49e517f14c6f953a343ee05810             3059 main/binary-amd64/Packages.gz
+ 2ffe98d5c94b8f95a289d8fb4f8b1efd            11569 main/binary-amd64/Packages
+ 6d05a05528f17a09f1727a84031d539b             3249 main/binary-amd64/Packages.gz
 SHA1:
- 0e5aded1f347a17fd2fa432ca86424701ec324bd            10802 main/binary-amd64/Packages
- 382d2432da5a99c133dfbfe941306b9a6d0cb31a             3059 main/binary-amd64/Packages.gz
+ 30bf172c4fa5d23687bcb29e898d1907dda013bd            11569 main/binary-amd64/Packages
+ 76bd1efd9f5f1785810c0f90e9a23cadce31a819             3249 main/binary-amd64/Packages.gz
 SHA256:
- 211587a94d234ede71de88f989568ce6dc1275b04e41eb84a85b2c64a1655ae6            10802 main/binary-amd64/Packages
- 0d80ff9cbc5271e51cc792e9feebcbb3a11b7ca064df0d7ba29cf65855de1737             3059 main/binary-amd64/Packages.gz
+ 235e9d1d19fd0d341c0205d4639c93fc50f2b09f49666a450a094ecc8f1f54a5            11569 main/binary-amd64/Packages
+ c2d7f7377701d15f1a6a3699def5a7796e88c5870265b501ebc640be3d0266b7             3249 main/binary-amd64/Packages.gz
 SHA512:
- e03ae79476515c6d390ed53d42320c2d4bca013d6b28f663fcb66af8a30f86582a0e78e1cf6b8c8dfddc46252de86d306c15c4ba5b398196cbfe533a2fa9d495            10802 main/binary-amd64/Packages
- 150e376af8fe45af838520e8fb349c3ea66e664122c51d6145b151b547313a4e820a710e8ac915f12f6050201c01da02c69da82e9ccdd0e123a1daa0108f3e69             3059 main/binary-amd64/Packages.gz
+ 3f90fbeb79ce0ae2d12ed54068cc5f10ee9a2161d13fc6a1f0ebd702cb56b89a9a140861dcac32a301e45ce902e20161b559e2ae22d633e9cc0e2d4a93698f78            11569 main/binary-amd64/Packages
+ 7efa526c50f72ccc862dbe874fb9a8557dcc2c85d83aeb89ee57135acc20607af4904aa2f353480048b79af8d41a4742de84873c9cd0b567e0c22f8112d611ef             3249 main/binary-amd64/Packages.gz
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEla13di840a7M17/JKlxFrsAOc4gFAmrtxnkACgkQKlxFrsAO
-c4i4Nw//RktQjDGwJZo6bLWEBK67TZlEB+x26+Hc0fZ2bm1q/9ESOaHlgrXtYtwt
-32fJImIPTQxlqht/6gUH5olZD+kSDMInL/wI5LOYhj6AgbOxS9OCgp9lXYrHvPyu
-ncgRtnTrpqi5/LPBUJD2Ync3XY+KCfg5QTtzWbXS0NQYuRM6BkROz6T6TJPUWEDF
-GTGheR/6dzCD/4l4XG+cQdW4BPQx6/5SSuzECM99xxT0WBOU4TYHPZSTmdYQpBfu
-ZdDbsFspW6UTWi7zcs6hBKSa1/HSnrBGfRkiz2tleIBeBICiUrCnY3abIVkaKmMY
-gh2zWgm0TfU53+H8LK8mEJa0CY/ltEnPMf5huADsSTo79G19VdBI/cvGLshyymKt
-+biLgW1ywZ/VCYpp8QHQ9vOunjFh4agY0JsGVvy+RHkRJ0l7C+BLUuCi44RaNQpF
-PQ95NprcMoKMyKbobuiQVE9r831yjzVnc733p5PrblzYM89YMxskiu9myVBGTk2w
-oKZ7pyxMC/Zfphrr/1P3IYRiRpBsfi1PQSjt/3OlUcgb2oZFCCLxQbyINPSbZsQo
-qhpOpckdZJVcRJRtDGV90MMD/i97LmY26atlxOvQSufzGPYPsj6XGamX3OZxbrXT
-WGUIB/VtA9c4ho7w4xDugp8B5hcXHnyymY4e1M1OdrIboLYwgic=
-=Hkwg
+iQIzBAEBCAAdFiEEla13di840a7M17/JKlxFrsAOc4gFAmruA6kACgkQKlxFrsAO
+c4hYHA//e7MOPH7eJM/EIDJDynMwfM/stqTX4F4jbeKsWUsXi3rcwSI0X0VMPDzS
+tlB5qh6t6rqZ7vWz9+r5cqXwj0G/IHzpcGAB/tAu80DTrTkR+EE/x2mRJwu+Zbp9
+DNGqu3G6NuZFBlVvkmaXMDog/juQf3eGPs9qjDpMqL5uKhS5JAkab9Zt/MLFFlWP
+2twc7p6m6VO9/izbvQ028PyD9SdLm8qH7AueWBlLip9gnuHv/AzZzGumDJaKxsUT
+shPi4e+nKXzj2TKdvJB33TuuZClTj4k1nfaFXBoAVh00UxFUGHF6Z3J0pJHUGART
+g3I2L8ofKrAsDQ3YQWM2IE1C5Qq9xbkIC445T5Ps2N8t/OBXCYBrx2OOIWgJvDIQ
+MClQPLZs3YM3w+X89z41GSZH870feMfZyhg9qqSOd5O+gJUim/PziBek6sf+1Uj0
+cQy8Zz/c2jP8ddpv969LlhmvZ/mIdqpWvcGSK5vVONPCUrukfrwIlwpksi3j+YrZ
+vICZ4cAbQXqdVVvQ+CWFlOJLQILcr1mwatiR7VZdkc1Bz1mwCe5K+HfGYAxgED4M
+DKHvInuHmCHIZWpdY20aNas2m877D+y1WbNsgRgU/kTALq/eFnDxlc4OBG8Bxp2Y
+JGK/fSujlzf9r8am+NE+VA3g/LKWb5Mxdnt3oUt0SHIcy6GIQ/M=
+=EhXn
 -----END PGP SIGNATURE-----
