@@ -1,22 +1,22 @@
-Valid-Until: Sun, 07 Feb 2027 23:16:03 GMT
+Valid-Until: Mon, 08 Feb 2027 10:26:09 GMT
 Acquire-By-Hash: yes
 Architectures: amd64
 Codename: stable
 Components: main
-Date: Mon, 09 Nov 2026 23:16:03 +0000
+Date: Tue, 10 Nov 2026 10:26:09 +0000
 Description: Stealth Factory application packages
 Label: Stealth Factory
 Origin: Stealth Factory
 Suite: stable
 MD5Sum:
- dea262c7b650fcc409d8e9dfe6fabc08            14643 main/binary-amd64/Packages
- 99ad612db0f80df4e342ff35ddf90281             3995 main/binary-amd64/Packages.gz
+ b83986bfc2f8ca626067bdd6d201121c            15412 main/binary-amd64/Packages
+ ef710751a4105e5fe8606f5aab208847             4187 main/binary-amd64/Packages.gz
 SHA1:
- 8f6bc807a34a53b05291a310dcda63ba0cfaf5b8            14643 main/binary-amd64/Packages
- 2f2e8a5f30398712cad6d2078449d6e7b3e313c4             3995 main/binary-amd64/Packages.gz
+ 36a385846b5eaffef6713bbc54de53ef1d4161df            15412 main/binary-amd64/Packages
+ d2afb319c11eb2110e336bfffb071d58e014db43             4187 main/binary-amd64/Packages.gz
 SHA256:
- df0350d544eaa8141eeada9b2d39d8b2a5e82f4b1e0fd6a3314252cba5df8899            14643 main/binary-amd64/Packages
- 8782466b66672f0da5576e59383b63ee491607a86545a07cec33fd6414b8bbfc             3995 main/binary-amd64/Packages.gz
+ 41649b7174d09c469f9a1d5d3703dcf53c3aabab9b705052cd88bb874716764e            15412 main/binary-amd64/Packages
+ cee8dc1fb25425e012ba2d5a42947f83efa32617977343a13617a1f0023b56ab             4187 main/binary-amd64/Packages.gz
 SHA512:
- cc43b3c70e75bcf7e2d954d121e2456a3572280f1a68216c72beea816e74ad8803398fd459c09a0767a908a7bf204a7e8154b0cfdc7eaa9b7c4198ba0ebf0917            14643 main/binary-amd64/Packages
- 34cf5da8623c717d5e02911f6d57282eb1e294416c316b684f467ad529fd4ff64cf9350ed00b8b3d5f1cfb3c7e13a13ac96a55fc7ba3deb2b0bfff8de99b8a98             3995 main/binary-amd64/Packages.gz
+ a3ba3e63bdb8560910df423c997265e9e3edb2f8b8c24866b3cfa521923f55891442d88a6d19323343d7fea7478661763986e857d4bbf3aae5d81dc88458473e            15412 main/binary-amd64/Packages
+ d109af8255f26999f4a337343b982f50d06dfe10e1facd4997c2cec3cacd40c25b2e05452837c5c5d59275b02231dcc70fd42bd4b67611f58e026de4860de775             4187 main/binary-amd64/Packages.gz
