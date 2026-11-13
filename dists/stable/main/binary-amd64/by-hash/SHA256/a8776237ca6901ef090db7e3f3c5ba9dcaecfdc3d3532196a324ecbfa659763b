@@ -1,0 +1,399 @@
+Package: opscope
+Architecture: amd64
+Version: 1.10.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 23650
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_1.10.0_amd64.deb
+Size: 3522640
+MD5sum: e647bbaf22b595cb4d0b539c7d14d185
+SHA1: 6ed7caab4c31aac15f457698374522bb9140ef69
+SHA256: f05b395ff3f88cfead0127106166989e4afc84449f542cfad9f2f451b43014e6
+SHA512: 52c6b1beae96a30c8549b3ed7dcbf058c31a6ce2101549e5c324649c5243a5449ff09e99cbf5ef818f83a1f17ee3884a0b7c473ab9c3dd0edd55d39a768e66fb
+Homepage: https://github.com/stealth-factory/opscope
+Description: terminal widgets showing real operational data
+ Sixteen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 1.11.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 23923
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_1.11.0_amd64.deb
+Size: 3547080
+MD5sum: dcb3769b5cde274f1039056ccbdcad9d
+SHA1: cc33f276924593b0347bde403951b88424957b64
+SHA256: 97a54475aeff0b13fead00488752295422d3710aa7836beb0895736e27f619f2
+SHA512: 01881b622e89f1a11c8f4c7bc8781a4256dc58c8d7b82c1cac65774a88cc000bc00331bf6692aee5582234e186463b18a96d5a4f81e3ad35be0b05ec8d905a57
+Homepage: https://github.com/stealth-factory/opscope
+Description: terminal widgets showing real operational data
+ Sixteen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 1.5.1
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 23096
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_1.5.1_amd64.deb
+Size: 3429368
+MD5sum: e8b222068d3d7c0578707fc67cf63fc6
+SHA1: ece58feca94026300f36af27474269e69086e208
+SHA256: 99d1d1bcc9dced8c84797fff2de7b58498efeb796c2edcdb233d4fa09050d84b
+SHA512: 103291c5a7d97e01bd6e5f58cdddc6e4e0f0f2eeb1e694d5a7a4928907e229c716bcb3d99592c06335e6c14c7781b179aced79a77a276865d43dfdd0e640293e
+Homepage: https://github.com/stealth-factory/opscope
+Description: terminal widgets showing real operational data
+ Sixteen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 1.6.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 23101
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_1.6.0_amd64.deb
+Size: 3422500
+MD5sum: ae5b12c6b6eafd284f30e16f3788a66b
+SHA1: 03187f23b5638325b9c93b2a2957424fe5225625
+SHA256: 83d18ab578a139c93b1bb0b9c6f1f59e2c1bfdfb46e5e6cfa85c5b5e0f5fcc6e
+SHA512: c7afed3f1494386250b2ab32373d457f7b7b8353b8e7fb7674080e53003c75d6ec2353b6d9c5c44a61cc24aed751d32db58299edb6164c7c714ab31f459c7968
+Homepage: https://github.com/stealth-factory/opscope
+Description: terminal widgets showing real operational data
+ Sixteen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 1.7.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 23101
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_1.7.0_amd64.deb
+Size: 3428628
+MD5sum: 65eb633111c8d2c67508cf14349021d1
+SHA1: 24b4e44771da9f6b8532607507c7e0192fcdd229
+SHA256: 6fd5a5e7cde8b9cd7049b17afaae84a506e104caaa5a37f0dec805480299cad1
+SHA512: e2183ec7087297af5f41a58f26d598acea45e19723f32bf66f301858b83a20d8c3a882823c36e248f4e5f54f53e760a1aaebe225ff9d46fc48add685d9332890
+Homepage: https://github.com/stealth-factory/opscope
+Description: terminal widgets showing real operational data
+ Sixteen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 1.8.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 23227
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_1.8.0_amd64.deb
+Size: 3468260
+MD5sum: 5ad540dba1b7400dfa79e3a7682504fe
+SHA1: f21a8c5f52a92bfa4fc7e5713ed31af65e35f92b
+SHA256: 90755ef8c19ccf9dadf42b2b399e3e9eaba04f38fe7fe22170931d127c7ed767
+SHA512: 0ee07a578943d262386701c45dc1358d8f55f3e8802aab4575a63331c8f68e6a779b1c41ee32b82e0694aa994efd3e420bf002c52301cc3a814b2eb806e36dda
+Homepage: https://github.com/stealth-factory/opscope
+Description: terminal widgets showing real operational data
+ Sixteen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 1.9.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 23380
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_1.9.0_amd64.deb
+Size: 3504828
+MD5sum: 29c7caacd70472fc44237d4dcbac1c3b
+SHA1: d655618c72081732bce102c7e3d66de0e57b8e11
+SHA256: 8423dabcaee14f8c90bff2df760de84e714358509399d53cefafd996b31b0597
+SHA512: b1316c906e2769cecfca334dc58657471c19add8a4f988e849ce0aabd98a75b6edbb0b17e759eac8b5003bae791288ed0ac4443af4af34aff0f79bd7f8908d21
+Homepage: https://github.com/stealth-factory/opscope
+Description: terminal widgets showing real operational data
+ Sixteen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.0.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 23889
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.0.0_amd64.deb
+Size: 3531308
+MD5sum: 8adf095840eb37a4c22f5e7c3a97fe46
+SHA1: e632520e5967081fd82eec6e827fa12e1fcc1dca
+SHA256: 7c7baefd0b79130bf46b3018e4c6f8e349fe00ae916d9737e2fdcaff0208e68a
+SHA512: a36c295b7b1b1a30fcd75e29b82ea785a8a40ab0e2daffdc18a47e1eb1697aae1f8b86a4128306e53114e2b9e89a40589bd4aa77cdd8afb795f59cb667bedb21
+Homepage: https://github.com/stealth-factory/opscope
+Description: terminal widgets showing real operational data
+ Sixteen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.0.1
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 24266
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.0.1_amd64.deb
+Size: 3587200
+MD5sum: 496b1ef6fb08b6e7c9d2fffeeff30c8a
+SHA1: ac26ab01372712020c7ba4eb86a3601af2ec31e8
+SHA256: aa4cd26e2cf2d32463ce18cc4fe05e501028d7701ae60f009af801d5dfdf179e
+SHA512: f1bb662970bb550acb179430131b8b3996a484532fd7912aa4e9363215a2d24b1331ff5237c32dd528bb018e18443c189d238c1bf4797f323f1ba5f68522808e
+Homepage: https://github.com/stealth-factory/opscope
+Description: terminal widgets showing real operational data
+ Sixteen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.1.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 25060
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.1.0_amd64.deb
+Size: 3846280
+MD5sum: 52174fba9c8af8af9d1a65e9e97a6db1
+SHA1: 7bc017878b3f070b17977e738d1c249bacf7a135
+SHA256: 1ebcc621484c004b7a5755810a67af5ed835bbfa8e490ccc5c0ce264fdd12fee
+SHA512: a3655a6b082ccb3f0bc4da6750de0d0480a916c2a620f74fb9abe104ba8dd23041a8bed7da1bca3b8668b73a0e8aebfc97baa550516f5584c325b247633b51c0
+Homepage: https://github.com/stealth-factory/opscope
+Description: terminal widgets showing real operational data
+ Sixteen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.10.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 38599
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.10.0_amd64.deb
+Size: 5764276
+MD5sum: d8bbb71900c1649216f2d7f70e46b917
+SHA1: 3158518ed9da71f47b70276a90dc98bc26c90b79
+SHA256: a710d9ecb30ce65e11d01e0cae04ffc62278c3fe89434040568107baa721a4aa
+SHA512: e6bb29e78ca6b0f4243c46be7e7aeb6ebd491bb8f2a75669ee1883e2102cc7e8f1765fcbf5e76809a8777a1d0033e78220f5de54f8f329fe9b524c1c8e5fe5d5
+Homepage: https://opscope.stealth-factory.co
+Description: terminal widgets showing real operational data
+ Seventeen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.10.1
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 38600
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.10.1_amd64.deb
+Size: 5754080
+MD5sum: b722302170d50788f1469074f0aa2d19
+SHA1: 1be4a1b18f25a2e48016916139e23b774ec10715
+SHA256: 48d5e863fd6607be1960ce45f61559479b66080ba69a442fd3f9588b884921c1
+SHA512: 152916c7bdd03ca0ebaa63984f9f74032c9933c1a2823cf86abe224e81b267137f4036899a2ac5b87a5b6e5888d3afec4bb6f8bf05e4144c74d62398be0a8238
+Homepage: https://opscope.stealth-factory.co
+Description: terminal widgets showing real operational data
+ Seventeen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.11.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 38918
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.11.0_amd64.deb
+Size: 5878044
+MD5sum: f3bb0aa140675ae77f56517ccba5aab4
+SHA1: b9b48aa8bbaa0cd94c329c73b370cb3a624eb627
+SHA256: afbad212cb4d64b158de4d48d1647045d65fc86afcefdf8aa20a0a1e23ff5ab6
+SHA512: 67281ce081e6ffd6dca1122b4d16038b9b9f16d41b8cc5c7d591a52784dbd26bd7f9c6f71827ff4629f830897576529034bad071e82b565198217046bc165d36
+Homepage: https://opscope.stealth-factory.co
+Description: terminal widgets showing real operational data
+ Seventeen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.12.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 40974
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.12.0_amd64.deb
+Size: 6177688
+MD5sum: 3f2cf4e0144370f06cd6a34d49870247
+SHA1: efa2a807a79933a7d36bfe97e82ef81fc5e94a49
+SHA256: 858f51006ee68cb52bcfe2c8e957282b8470cdb3a0baabe3721b4139c48a546b
+SHA512: 17b6b6ea3aa4ffcd6af6522848b8d4fc42591bdbd9efee4bab412cf52fd00eefcda092dda798b993e987dc698b8c86c345d88ed3a6a0e983cfd2b43d73371696
+Homepage: https://opscope.stealth-factory.co
+Description: terminal widgets showing real operational data
+ Seventeen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.15.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 44854
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.15.0_amd64.deb
+Size: 7091476
+MD5sum: 5165e584850f793e1a55675b60d34e33
+SHA1: 59c3597ba5b7b4481ed86c616005aeecac906623
+SHA256: eb90fa23725ccc4f681f49d00228daae9fdb0dd66bca1cee3597fe860754e202
+SHA512: eb1a28dc877ae8444a4a70a739ada94dcfadc9c670c9ea9a8f7e9d84930bafc0d7184c3fa9614d88ef9a0b1823f3df15eb3e82563f1158cb7ae4d8a9e3cc99f9
+Homepage: https://opscope.stealth-factory.co
+Description: terminal widgets showing real operational data
+ Seventeen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.6.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 34855
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.6.0_amd64.deb
+Size: 5279916
+MD5sum: 34be10afb37a6304fe133deb09c2255e
+SHA1: 239912e4ab23db29ed604b4f7a5523dfaa6c2c29
+SHA256: 16db5ef7d95bbdfb7867ac5a0019b9730aac160492b1e7c2fd257b2a9935aa24
+SHA512: 1d330db7deecd13da08bf6d47e3fe6d86cbe18f6aee2a93ffef82b0b1c020ff9e096e80402fcb50c2e876e025fff78cb9a123065a894b891fe0f395e9d6c25ba
+Homepage: https://opscope.stealth-factory.co
+Description: terminal widgets showing real operational data
+ Seventeen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.7.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 36605
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.7.0_amd64.deb
+Size: 5529312
+MD5sum: 15e04b7eb8af8d07692a3d44f5d76a42
+SHA1: d492599e5f3e55be9740cbbf88a7a93fdf4105b3
+SHA256: 683af915560bd60547362ad5369ae0df391cad13fa8aa465a4ef0076241eaa9c
+SHA512: f12738d159b71067d4ed7dd604d61934e252afd3a8a08a77d27455901de61551324ba275f16c5ac62172ac98599b61559c1b9802f874c7fcbd0ee733144c9bb6
+Homepage: https://opscope.stealth-factory.co
+Description: terminal widgets showing real operational data
+ Seventeen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.8.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 34369
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.8.0_amd64.deb
+Size: 5356564
+MD5sum: 0ee0fd5db4e66dc760a7c820dc46e33a
+SHA1: d1f647c9064ae6a68703a559ff5b1e55a25902c9
+SHA256: c180ea834f1acbceb3a1e96895b20dab56eaeeda756debf238cff1d9a3eadea1
+SHA512: 4387bfd891b80cd01c2d0bdbc5fa9a8e3d8ab4417c6edcbd236de2253a224df8bd261c123a8597b23d9929089d984b0e88e99f3369e73eb43a677070fce0700c
+Homepage: https://opscope.stealth-factory.co
+Description: terminal widgets showing real operational data
+ Seventeen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.9.0
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 37088
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.9.0_amd64.deb
+Size: 5616844
+MD5sum: 6695a74e4915485976c0843b867da1ef
+SHA1: ab4f1e9728b49ef64417d9573a2711cfb30eba9c
+SHA256: e3193324e89f582b8a4915cdee19c9b8b890482996a02dcb30f00a2a51aa16fc
+SHA512: 31b4e4166a38ff09c4d417899e0e2f830bcbf3f8655ffcbadc5ac1a22876426481139584e4d46386cba5ca2ac5b305f62d2c39755eda21e78b717d461100f54c
+Homepage: https://opscope.stealth-factory.co
+Description: terminal widgets showing real operational data
+ Seventeen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.9.1
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 38581
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.9.1_amd64.deb
+Size: 5747100
+MD5sum: a8d466e5ab3bfc1153635e61dd021799
+SHA1: 1dcdef526eae6e0d14fc05569871ec59ed8e8c1c
+SHA256: f2e231c34eef35960a76854c55c941505db31acb74aef0a8f6fc86af8230a065
+SHA512: 8c5587897b536dbc0669a473777185f87169bf104b4c1310d89c5a39c9ea16c9bbb9196dc744346890466643f300aba8b509a3d24f91baa4824faf80c0479dc9
+Homepage: https://opscope.stealth-factory.co
+Description: terminal widgets showing real operational data
+ Seventeen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
+Package: opscope
+Architecture: amd64
+Version: 2.9.2
+Priority: optional
+Section: utils
+Maintainer: William Li <email@wiiiimm.codes>
+Installed-Size: 38581
+Depends: libc6 (>= 2.35), libgcc-s1
+Filename: pool/main/opscope/opscope_2.9.2_amd64.deb
+Size: 5753004
+MD5sum: 7f1362c4a7248a4164ccc8b9c52e26a1
+SHA1: e4d5991a853be3eb80c97109a4fa178aabe8523f
+SHA256: fc11891c750388a546357e9d4c019d904cb30b6b0d5ab8ccf226be5ea8605f24
+SHA512: 6c5b67be130c85426f48ea77bd19287f01aa52d02b167789c67f098b70cf1a99a6e6f09161b57e45734c4f7b61adfc06c7ff58c6816baf0b08cd32b76d81d1a8
+Homepage: https://opscope.stealth-factory.co
+Description: terminal widgets showing real operational data
+ Seventeen widgets and their launcher, with private sibling binaries.
+ No Node or Rust runtime is required.
+
